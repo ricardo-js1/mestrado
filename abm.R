@@ -6,6 +6,11 @@ set.seed(42)
 # Importando o script que gera a população
 source("gera_pop.R")
 
+# Importando tabela de parâmetros
+sobrevida = read.csv2("sobrevida.csv") |> 
+  dplyr::select(-total) |> 
+  tidyr::pivot_longer(!idade, names_to = 'sexo', values_to = 'prob')
+
 # Gerando uma população de tamanho n
 pop = gera_pop(10000)
 
@@ -37,16 +42,9 @@ abm = function(pop = pop[[1]], W = pop[[2]],
   while((t <= anos) & (pop_prop >= min_pop)){
     
     # Tamanho da pop sob risco no começo da iteração
-    n0 = sum(pop_sim$morto == 0 & pop_sim$has == 0)
+    n0 = sum(pop$morto == 0 & pop$has == 0)
     
     # O primeiro passo é atualizar a idade e quem morreu
-    pop = purrr::map_df(pop,
-                        function(pop){
-                          
-                          # Primeiro mata os agentes
-                          
-                          
-                        })
     
     
     
