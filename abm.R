@@ -39,6 +39,15 @@ abm = function(pop = pop[[1]], W = pop[[2]],
     # Tamanho da pop sob risco no começo da iteração
     n0 = sum(pop_sim$morto == 0 & pop_sim$has == 0)
     
+    # O primeiro passo é atualizar a idade e quem morreu
+    pop = purrr::map_df(pop,
+                        function(pop){
+                          
+                          # Primeiro mata os agentes
+                          
+                          
+                        })
+    
     
     
   }
