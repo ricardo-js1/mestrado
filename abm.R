@@ -6,6 +6,9 @@ set.seed(42)
 # Importando o script que gera a população
 source("gera_pop.R")
 
+# Importando as funções auxiliares
+source("abm_funcoes.R")
+
 # Importando tabela de parâmetros
 sobrevida = read.csv2("sobrevida.csv") |> 
   dplyr::select(-total) |> 
@@ -15,7 +18,8 @@ sobrevida = read.csv2("sobrevida.csv") |>
 pop = gera_pop(10000)
 
 # Função para rodar a simulação
-abm = function(pop = pop[[1]], W = pop[[2]],
+abm = function(pop = pop[[1]],
+               W = pop[[2]],
                anos = 100, min_pop = 0.1, idademax = 85,
                interv_i = 16, interv_fim = 60,
                prob_af = 0.1, prob_dieta = 0.1,
@@ -41,15 +45,24 @@ abm = function(pop = pop[[1]], W = pop[[2]],
   
   while((t <= anos) & (pop_prop >= min_pop)){
     
+    if(t == 1){  
+      
+      pop_iter = pop[pop$iter == 0,] 
+      
+      } else {
+      
+      pop_iter = pop[pop$iter == t,]  
+        
+    }
+    
     # Tamanho da pop sob risco no começo da iteração
     n0 = sum(pop$morto == 0 & pop$has == 0)
     
     # O primeiro passo é atualizar a idade e quem morreu
-    
-    
-    
+    pop_iter = atualiza_idade(pop_iter, sobrevida, idademax = 100)
+  
+  
+  
   }
-  
-  
   
 }
