@@ -60,8 +60,13 @@ abm = function(pop = pop[[1]],
     
     # O primeiro passo é atualizar a idade e quem morreu
     pop_iter = atualiza_idade(pop_iter, sobrevida, idademax = 100)
-  
-  
+    
+    # Atualizando o IMC
+    pop_iter = atualiza_imc(pop_iter)
+    
+    # Atualizando o nível pressórico
+    
+    
   
   }
   

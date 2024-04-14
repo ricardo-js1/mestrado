@@ -18,3 +18,23 @@ atualiza_idade = function(pop, probs = sobrevida, idademax = 100){
   return(pop)
   
 }
+
+atualiza_imc = function(pop){
+  
+
+    pop$imc = ifelse(pop$morto == 0, 
+                     ifelse(
+      pop$sexo == 'M',
+      pop$imc + 0.312 - 0.006712 + 0.00004288 - (2 * 0.006712 * (pop$idade - 18)) - (3 * 0.00004288 * (pop$idade - 18)) +
+        (3 * 0.00004288 * (pop$idade - 18)^2) + rnorm(1, 0, abs(0.312 - 0.006712 + 0.00004288 - (2 * 0.006712 * (pop$idade - 18)) - (3 * 0.00004288 * (pop$idade - 18)) +
+                                                           (3 * 0.00004288 * (pop$idade - 18)^2))),
+      
+      pop$imc + 0.186 - 0.0003295 - 0.00002687- (2 * 0.0003295 * (pop$idade - 18)) - (3 * 0.00002687 * (pop$idade - 18)) +
+        (3 * 0.00002687 * (pop$idade - 18)^2) + rnorm(1, 0, abs(0.186 - 0.0003295 - 0.00002687- (2 * 0.0003295 * (pop$idade - 18)) - (3 * 0.00002687 * (pop$idade - 18)) +
+                                                           (3 * 0.00002687 * (pop$idade - 18)^2)))
+    ), pop$imc)
+    
+  
+  return(pop)
+  
+}
