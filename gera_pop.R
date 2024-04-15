@@ -139,7 +139,10 @@ gera_pop = function(n_agentes){
   # Número de contatos na rede social
   rede = rowSums(rede_social)
   
-  pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, rede)
+  # Atribuindo o grupo
+  grupo = ifelse(pas < 120, 119, 139)
+  
+  pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, grupo, rede)
   
   # Exportando uma lista com a população simulada e a matriz da rede social
   return(list(pop_sim, rede_social))

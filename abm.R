@@ -66,6 +66,18 @@ abm = function(pop = pop[[1]],
     
     # Atualizando o nível pressórico
     
+    # PAS
+    pop_iter$pas = pop_iter |>
+      dplyr::select(morto, sexo, grupo, idade, pas) |>
+      pmap_dbl(atualiza_pas)
+    
+    # PAD
+    pop_iter$pad = pop_iter |>
+      dplyr::select(morto, sexo, grupo, idade, pad) |>
+      pmap_dbl(atualiza_pad)
+    
+    
+    # Atualizando a população sob risco
     
   
   }

@@ -38,3 +38,30 @@ atualiza_imc = function(pop){
   return(pop)
   
 }
+
+atualiza_pas = function(morto, sexo, grupo, idade, pas){
+  
+  # Atualizando a pressão arterial sistólica
+    pas = dplyr::case_when(
+      morto == 0 & sexo == 'M' & grupo == 119 ~ pas + 0.47 + 0.014 + 2 * 0.014 * (idade - 60) + rnorm(1, 0, abs(0.47 + 0.014 + 2 * 0.014 * (idade - 60))),
+      morto == 0 & sexo == 'M' & grupo == 139 ~ pas + 0.61 + 0.006 + 2 * 0.006 * (idade - 60) + rnorm(1, 0, abs(0.61 + 0.006 + 2 * 0.006 * (idade - 60))),
+      morto == 0 & sexo == 'F' & grupo == 119 ~ pas + 0.62 + 0.013 + 2 * 0.013 * (idade - 60) + rnorm(1, 0, abs(0.62 + 0.013 + 2 * 0.013 * (idade - 60))),
+      morto == 0 & sexo == 'F' & grupo == 139 ~ pas + 0.89 + 0.009 + 2 * 0.009 * (idade - 60) + rnorm(1, 0, abs(0.89 + 0.009 + 2 * 0.009 * (idade - 60)))
+    )
+    
+}
+
+atualiza_pad = function(morto, sexo, grupo, idade, pad){
+  
+  # Atualizando a pressão arterial diastólica
+  pad = dplyr::case_when(
+    morto == 0 & sexo == 'M' & grupo == 119 ~ pad - 0.21 - 0.005 - 2 * 0.005 * (idade - 60) + rnorm(1, 0, abs(-0.21 - 0.005 - 2 * 0.005 * (idade - 60))),
+    morto == 0 & sexo == 'M' & grupo == 139 ~ pad - 0.26 - 0.01 - 2 * 0.01 * (idade - 60) + rnorm(1, 0, abs(-0.26 - 0.01 - 2 * 0.01 * (idade - 60))),
+    morto == 0 & sexo == 'F' & grupo == 119 ~ pad - 0.18 - 0.008 - 2 * 0.008 * (idade - 60) + rnorm(1, 0, abs(-0.18 - 0.008 - 2 * 0.008 * (idade - 60))),
+    morto == 0 & sexo == 'F' & grupo == 139 ~ pad - 0.10 - 0.012 - 2 * 0.012 * (idade - 60) + rnorm(1, 0, abs(- 0.10 - 0.012 - 2 * 0.012 * (idade - 60)))
+    )
+  
+  pad = ifelse(pad < 45, 45, pad)
+  
+}
+
