@@ -76,10 +76,14 @@ abm = function(pop = pop[[1]],
       dplyr::select(morto, sexo, grupo, idade, pad) |>
       pmap_dbl(atualiza_pad)
     
-    
     # Atualizando a população sob risco
     pop_iter = atualiza_risco(pop_iter)  
   
+    # Em seguida, é feito o sorteio para as intervenções
+    sorteados = sorteia_interv(pop_iter)
+    
+    
+    
   }
   
 }

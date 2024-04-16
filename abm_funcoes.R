@@ -82,3 +82,19 @@ atualiza_risco = function(pop){
    
 }
 
+sorteia_interv = function(pop){
+  
+  n_risco = sum(pop$risco)
+  n_sorteio = round(n_risco * meta, 0)
+  
+  sorteados = sample(pop$id[pop$risco == 1], n_sorteio)
+  
+  return(sorteados)
+  
+}
+
+atualiza_inter = function(pop, W, interv, sorteados, prob_af, prob_dieta, imc_min,  ){
+  
+  
+  
+}
