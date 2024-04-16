@@ -78,7 +78,7 @@ abm = function(pop = pop[[1]],
     
     
     # Atualizando a população sob risco
-    
+    pop_iter = atualiza_risco(pop_iter)  
   
   }
   

@@ -65,3 +65,20 @@ atualiza_pad = function(morto, sexo, grupo, idade, pad){
   
 }
 
+atualiza_risco = function(pop){
+  
+  pop$risco = dplyr::case_when(
+    pop$morto == 0 & pop$has == 0 & pop$imc > imc_min ~ 1,
+    pop$imc < imc_min & pop$tdi_imc > 0 & pop$tdi_imc <= tempo_max_imc ~ 0,
+    TRUE ~ 0
+  )
+  
+  pop$tdi_imc = dplyr::case_when(
+    pop$imc < imc_min & pop$tdi_imc > 0 & pop$tdi_imc <= tempo_max_imc ~ pop$tdi_imc + 1,
+    TRUE ~ 0
+  )
+  
+ return(pop)
+   
+}
+
