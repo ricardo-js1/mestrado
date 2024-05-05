@@ -93,7 +93,7 @@ sorteia_interv = function(pop){
   
 }
 
-atualiza_inter = function(pop, W, interv, sorteados, prob_af, prob_dieta, imc_min,  ){
+atualiza_inter = function(pop, W, interv, sorteados, prob_af, prob_dieta, imc_min){
   
   
   
