@@ -89,12 +89,91 @@ sorteia_interv = function(pop){
   
   sorteados = sample(pop$id[pop$risco == 1], n_sorteio)
   
-  return(sorteados)
+  pop$sorteado = ifelse(pop$id %in% sorteados, 1, 0)
+
+  return(pop)
   
 }
 
-atualiza_inter = function(pop, W, interv, sorteados, prob_af, prob_dieta, imc_min){
+atualiza_inter = function(pop, ...){
   
+  if(pop['sorteado'] == 1){
+    
+    # Primeiro decide se faz AF
+    pop[ativ_fisica] = rbinom(1, 1, ifelse(pop$ativ_fisica == 1, pop$prob_af, 1.15 * pop$prob_af))
+    
+    # Decidindo se faz dieta
+    pop$dieta = rbinom(1, 1, ifelse(pop$dieta == 1, pop$prob_dieta, 1.15 * pop$prob_dieta))
+    
+    aftodoano = rbinom(1,1,0.5)
+    dtodoano = rbinom(1,1,0.5)
+    
+    if(pop$ativ_fisica == 1 & pop$dieta == 1){
+      
+      red = rnorm(1, 4.2, 0.4)
+      red2 = rnorm(1, 4.2, 0.4) * aftodoano * dtodoano
+      pop$ured = red + red2
+      pop$imc = pop$imc - red - red2
+      
+    } else
+      if(pop$ativ_fisica == 1 & pop$dieta == 0){
+        
+        red = rnorm(1, 0.8, 0.1)
+        red2 = rnorm(1, 0.8, 0.1) * aftodoano 
+        pop$ured = red + red2
+        pop$imc = pop$imc - red - red2
+        
+      } else 
+        if(pop$ativ_fisica == 0 & pop$dieta == 1){
+          
+          red = rnorm(1, 4, 0.4)
+          red2 = rnorm(1, 4, 0.4) * dtodoano
+          pop$ured = red + red2
+          pop$imc = pop$imc - red - red2
+          
+        } else {
+        
+          if(pop$tdi > 0 & pop$tdi <= wear_off){
+            
+            pop$imc = pop$imc - pop$ured / pop$tdi
+            pop$tdi = pop$tdi + 1
+            
+          }
+          
+          if(pop$tdi > wear_off){
+            
+            pop$tdi = 0
+            
+          }
+          
+        }
+    
+    if(pop$ativ_fisica == 1 | pop$dieta == 1){
+      
+      pop$cont = pop$cont + 1
+      
+      if(pop$imc < imc_min & pop$tdi_imc == 0){
+        
+        pop$tdi_imc = 1
+        
+      }
+      
+      pop$tdi = 1
+      
+      if(pop$tdi == 1){
+        
+        pop$imc = pop$imc
+        
+      }
+      
+      
+    }
+    
+    
+  }
   
+  return(pop)
   
 }
+
+apply(pop_iter, 1, atualiza_inter)

@@ -22,7 +22,6 @@ abm = function(pop = pop[[1]],
                W = pop[[2]],
                anos = 100, min_pop = 0.1, idademax = 85,
                interv_i = 16, interv_fim = 60,
-               prob_af = 0.1, prob_dieta = 0.1,
                imc_min = 25, meta = 0.3, tempo_max_imc = 3,
                wear_off = 4){
   
@@ -80,8 +79,7 @@ abm = function(pop = pop[[1]],
     pop_iter = atualiza_risco(pop_iter)  
   
     # Em seguida, é feito o sorteio para as intervenções
-    sorteados = sorteia_interv(pop_iter)
-    
+    pop_iter = sorteia_interv(pop_iter)
     
     
   }
