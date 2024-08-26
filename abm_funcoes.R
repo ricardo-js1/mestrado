@@ -97,10 +97,14 @@ sorteia_interv = function(pop){
 
 atualiza_inter = function(pop, ...){
   
-  if(pop['sorteado'] == 1){
+  n_pop = nrow(pop)
+  
+  if(pop['sorteado'] %in% 1){
+    
+    if(pop["ativ_fisica"] %in% 1){prob_af = pop['prob_af']} else {prob_af = 1.1 * pop["prob_af"]}
     
     # Primeiro decide se faz AF
-    pop[ativ_fisica] = rbinom(1, 1, ifelse(pop$ativ_fisica == 1, pop$prob_af, 1.15 * pop$prob_af))
+    pop['ativ_fisica'] = rbinom(n_pop, 1, prob_af)
     
     # Decidindo se faz dieta
     pop$dieta = rbinom(1, 1, ifelse(pop$dieta == 1, pop$prob_dieta, 1.15 * pop$prob_dieta))
@@ -176,4 +180,4 @@ atualiza_inter = function(pop, ...){
   
 }
 
-apply(pop_iter, 1, atualiza_inter)
+

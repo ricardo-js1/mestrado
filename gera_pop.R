@@ -147,13 +147,13 @@ gera_pop = function(n_agentes){
   f_probs = function(sexo_idade){
     
     dplyr::case_when(
-      sexo_idade == "F_FE1" ~ MASS::mvrnorm(1, c(0.6, 0.6), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "F_FE1" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE2" ~ MASS::mvrnorm(1, c(0.55, 0.55), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE3" ~ MASS::mvrnorm(1, c(0.5, 0.5), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE4" ~ MASS::mvrnorm(1, c(0.45, 0.45), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE5" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE6" ~ MASS::mvrnorm(1, c(0.35, 0.35), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE1" ~ MASS::mvrnorm(1, c(0.6, 0.6), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE1" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "M_FE2" ~ MASS::mvrnorm(1, c(0.55, 0.55), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "M_FE3" ~ MASS::mvrnorm(1, c(0.5, 0.5), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "M_FE4" ~ MASS::mvrnorm(1, c(0.45, 0.45), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
@@ -167,12 +167,12 @@ gera_pop = function(n_agentes){
   
   # Separando a pas e a pad e convertendo em numérico
   prob_dieta = unlist(strsplit(probs, ';'))[seq(1, n_agentes*2, by = 2)] |> as.numeric()
-  prob_dieta = ifelse(prob_dieta > 1, 1, prob_dieta)
-  prob_dieta = ifelse(prob_dieta < 0, 0, prob_dieta)
+  prob_dieta = ifelse(prob_dieta > 1, 0.85, prob_dieta)
+  prob_dieta = ifelse(prob_dieta < 0, 0.15, prob_dieta)
   
   prob_af = unlist(strsplit(probs, ';'))[seq(2, n_agentes*2, by = 2)] |> as.numeric()
-  prob_af = ifelse(prob_af > 1, 1, prob_af)
-  prob_af = ifelse(prob_af < 0, 0, prob_af)
+  prob_af = ifelse(prob_af > 1, 0.85, prob_af)
+  prob_af = ifelse(prob_af < 0, 0.15, prob_af)
   
   pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, grupo, rede, prob_af, prob_dieta)
   

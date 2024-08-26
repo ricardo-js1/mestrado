@@ -1,0 +1,508 @@
+---
+title: "Renda de Framingham e simulação do grid"
+toc: true
+number-sections: true
+format:
+  html:
+    embed-resources: true
+    code-background: true
+---
+
+```{r, include = F}
+library(tidycensus)
+library(tidyverse)
+library(DT)
+library(MASS)
+
+set.seed(999)
+```
+
+```{css, echo = F}
+.justify {
+  text-align: justify !important
+}
+```
+
+## Introdução
+
+::: justify
+Uma possibilidade para a alocação dos agentes em um grid simulando a cidade de Framingham é a utilização de uma variável de renda que permita explicar a maneira com que esta população se distribui no espaço. Uma fonte viável para obtenção desta informação são os microdados do censo americano, por meio destes podemos identificar a distribuição de renda por sexo e para a faixa etária utilizada para geração da população simulada.
+:::
+
+## tidycensus
+
+::: justify
+A opção escolhida para extrair os microdados do censo americano foi o pacote tidycensus, ele permite a extração dos mesmos a nível de PUMA (Public Use Microdata Area), ou seja, uma divisão espacial voltada especificamente para uso público dos microdados. A lista [disponível neste link](https://www2.census.gov/geo/maps/DC2020/PUMA/st25_ma/Catalog_PUMAmaps_st25.pdf) apresenta todos os PUMAs de Massachussets, permitindo identificar que o de código 00605 contém as cidades de Framingham e Marlborough. 
+
+Os microdados disponíveis não permitem separar entre as cidades de Framingham e Marlborough, porém são a maior aproximação possível que conseguimos neste cenário. Utilizaremos uma função do pacote tidycensus para extrair as informações de sexo (sex), idade (agep), região (region), renda per capita (fincp) e puma para o ano de 2022.
+:::
+
+```{r, message = F, warning = F, include = T, eval = F}
+microdados <- get_pums(
+  variables = c("SEX", "AGEP", "REGION", "FINCP", "PUMA"),
+  state = "MA", # Massachussets
+  survey = "acs1",
+  year = 2022,
+  recode = T
+)
+
+head(microdados)
+```
+
+```{r, include = F}
+microdados <- get_pums(
+  variables = c("SEX", "AGEP", "REGION", "FINCP", "PUMA"),
+  state = "MA", # Massachussets
+  survey = "acs1",
+  year = 2022,
+  recode = T
+)
+
+```
+
+```{r, message = F, warning = F, include = T, echo = F}
+head(microdados)
+```
+
+```{r}
+microdados = microdados |> 
+  filter(PUMA == "00605")
+
+microdados = microdados |> 
+  filter(FINCP >= 0 & AGEP >= 18)
+
+microdados = microdados |> 
+  mutate(faixa_etaria = cut(AGEP,
+                            breaks = c(-Inf, 24, 34, 44, 54, 64, Inf),
+                            labels = c('18 a 24 anos', '25 a 34 anos',
+                                       '35 a 44 anos', '45 a 54 anos',
+                                       '55 a 64 anos', 'Acima de 65 anos')))
+
+microdados = microdados |> 
+  mutate(renda_cat = cut(FINCP, breaks = c(-Inf, 78000, 123300, 205000, Inf),
+                         labels = c('Até 78000', '78000 a 123300', '123300 a 205000', 'Acima de 205000'))
+  )
+```
+
+
+```{r}
+hist(microdados$FINCP)
+```
+
+
+::: justify
+Uma vez obtidas as variáveis, o tratamento das variáveis e cálculo das proporções é trivial, a variável de idade será categorizada com as mesmas divisões utilizadas para gerar a população simulada do modelo baseado em agentes enquanto a variável de renda utilizará provisoriamente como categorias os quartis.Por fim, o indivíduos que apresentaram renda negativa ou idade abaixo de 18 anos foram excluídos desta base de dados. Lembrando que, por se tratar de uma amostra de um plano amostral complexo, devemos levar em consideração os pesos da amostra no momento do cálculo. Nesta base de dados, os pesos são contidos na variável PWGTP. 
+:::
+
+```{r}
+microdados |> 
+  group_by(SEX_label, faixa_etaria, renda_cat) |> 
+  count(wt = PWGTP) |> 
+  ungroup() |> 
+  mutate(prop = n/sum(n)) |> 
+  datatable(rownames = F, colnames = c('Sexo', 'Faixa etária', 'Renda',
+                                       'N', 'Proporção')) |> 
+  formatPercentage(5, digits = 2, dec.mark = ',', mark = '.')
+
+```
+
+::: justify
+Com base nessas proporções, tem-se informação suficiente para gerar uma categoria de renda simulada para os agentes no modelo. A divisão das categorias ainda tem ser melhorada, mas em posse dos microdados do censo americano isso é uma tarefa simples.
+:::
+
+## Distribuição espacial dos agentes
+
+::: justify
+O primeiro passo para simular a distribuição espacial dos agentes é a construção de um grid $k \times k$, em que $k$ é o número de linhas ou colunas no mesmo. O pacote CARBayes apresenta uma forma de simular dados autocorrelacionados espacialmente, aqui denotados por $\phi$, a partir de uma estratégia com base na matriz de distância $D$ entre as células de um grid e utilizando uma distribuição normal multivariada com média $\mu = (0, \dots, 0)^T$ e variância $\rho \times e^\left(-0,1 \times D\right)$. 
+:::
+
+```{r}
+# Criando o grid
+grid = expand.grid(x = 1:25, y = 1:25)
+k = nrow(grid)
+
+# Calculando a distância
+distance <- as.matrix(dist(grid))
+
+# Gerando phi
+grid$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma=0.4 * exp(-0.1 * distance))
+grid$phi_cat = cut(grid$phi, breaks = 4, labels = c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4'))
+grid$id = 1:nrow(grid)
+
+grid |> 
+  ggplot(aes(x=x, y=y)) +
+  geom_raster(aes(fill = phi)) +
+  theme_bw() +
+  ggtitle("Distribuição de phi no grid")
+```
+
+::: justify
+A documentação sobre a simulação destes dados não deixa clara o significado dos parâmetros presentes na especificação da variância. Possivelmente um deles é o parâmetro de variância em si e, o outro, o parâmetro que controla a autocorrelação espacial (a força de dependência espacial no grid). 
+
+Para verificar como estes parâmetros afetam o efeito simulado, $\phi$ foi simulado considerando quatro valores diferentes para $\rho$ e $\tau$. Em seguida, os diferentes $\phi$ simulados foram visualizados no grid e por meio de um boxplot. 
+
+Primeiro, avaliando $\phi$ simulados para diferentes valores de $\rho$:
+:::
+
+```{r}
+grid$tipo = 'rho = 0.1'
+
+# Gerando phis com a variância 0.4
+grid2 = grid
+grid2$id = 1:nrow(grid2)
+grid2$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma = 0.4 * exp(-0.3 * distance))
+grid2$tipo = 'rho = 0.3'
+
+grid3 = grid
+grid3$id = 1:nrow(grid2)
+grid3$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma = 0.4 * exp(-0.6 * distance))
+grid3$tipo = 'rho = 0.6'
+
+grid4 = grid
+grid4$id = 1:nrow(grid2)
+grid4$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma = 0.4 * exp(-0.9 * distance))
+grid4$tipo = 'rho = 0.9'
+
+grids = bind_rows(grid, grid2, grid3, grid4)
+
+grids |> 
+  ggplot(aes(x=x, y=y)) +
+  geom_raster(aes(fill = phi)) +
+  theme_bw() +
+  ggtitle("Distribuição de phi no grid com diferentes rhos") +
+  facet_wrap(~tipo, ncol = 2) 
+
+grids |> 
+  ggplot() +
+  geom_boxplot(aes(x = phi, color = tipo, group = tipo)) +
+  theme_bw() +
+  ggtitle("Distribuição de phi no grid com diferentes rhos") 
+  
+```
+
+::: justify
+Nota-se que quanto menor o valor de $\rho$, a superfície do grid se torna mais suavizada, ou seja, a variação entre as células ocorre de forma mais gradual. A quantidade de ruído presente no grid aumenta gradativamente com $\rho$. A variabilidade das quatro simulações se manteve em um patamar similar neste caso.
+
+Em seguida, avaliando $\phi$ simulados para diferentes valores de $\tau$:
+:::
+
+```{r}
+grid$tipo = 'var = 0.4'
+
+# Gerando phis com a variância 0.4
+grid2 = grid
+grid2$id = 1:nrow(grid2)
+grid2$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma = 0.8 * exp(-0.1 * distance))
+grid2$tipo = 'var = 0.8'
+
+grid3 = grid
+grid3$id = 1:nrow(grid2)
+grid3$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma = 1.2 * exp(-0.1 * distance))
+grid3$tipo = 'var = 1.2'
+
+grid4 = grid
+grid4$id = 1:nrow(grid2)
+grid4$phi <- mvrnorm(n=1, mu=rep(0,k), Sigma = 1.6 * exp(-0.1 * distance))
+grid4$tipo = 'var = 1.6'
+
+grids = bind_rows(grid, grid2, grid3, grid4)
+
+grids |> 
+  ggplot(aes(x=x, y=y)) +
+  geom_raster(aes(fill = phi)) +
+  theme_bw() +
+  ggtitle("Distribuição de phi no grid com diferentes taus") +
+  facet_wrap(~tipo, ncol = 2) 
+
+grids |> 
+  ggplot() +
+  geom_boxplot(aes(x = phi, color = tipo, group = tipo)) +
+  theme_bw() +
+  ggtitle("Distribuição de phi no grid com diferentes taus") 
+  
+```
+
+::: justify
+Desta vez, nota-se um aumento da variabilidade acompanhando o crescimento do valor definido na simulação. No entanto, de forma diferentes a $\rho$ a distribuição espacial no grid não se torna mais ruidosa, mas sim, com maior amplitude (o que fica bem claro com o boxplot). Assim, a parametrização adequada possivelmente é uma com $\rho$ baixo e variância baixo, para construir um grid cujo comportamento da distribuição espacial seja mais suavizada.
+:::
+
+## Simulando a renda e alocando os agentes no grid
+
+::: justify
+Nota-se que existe um padrão espacial na variável simulada. Agora, pode-se categorizar a variável $\phi$ simulada da mesma maneira com que a variável de renda foi para simular a maneira com que uma possível renda estaria distribuída no grid.
+:::
+
+```{r}
+grid %>% 
+  ggplot(aes(x=x, y=y)) +
+  geom_raster(aes(fill = phi_cat)) +
+  theme_bw() +
+  ggtitle("Distribuição de phi categorizado em 4 faixas")
+
+```
+
+::: justify
+A partir da distribuição das categorias de renda por faixa etária e sexo, torna-se possível construir uma função para simular a renda de uma população virtual. Isto será feito de forma similar de quando o IMC foi gerado para os agentes.
+:::
+
+```{r}
+probs_renda = microdados |> 
+  group_by(SEX_label, faixa_etaria, renda_cat) |> 
+  count(wt = PWGTP) |> 
+  ungroup() |> 
+  mutate(prop = n/sum(n)) |> 
+  arrange(desc(SEX_label))
+
+f_renda = function(sexo_idade){
+  dplyr::case_when(
+    sexo_idade == "F_FE1" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[1:4]) == 1)],
+    sexo_idade == "F_FE2" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[5:8]) == 1)],
+    sexo_idade == "F_FE3" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[10:12]) == 1)],
+    sexo_idade == "F_FE4" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[13:16]) == 1)],
+    sexo_idade == "F_FE5" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[17:20]) == 1)],
+    sexo_idade == "F_FE6" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[21:24]) == 1)],
+    sexo_idade == "M_FE1" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[25:28]) == 1)],
+    sexo_idade == "M_FE2" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[29:32]) == 1)],
+    sexo_idade == "M_FE3" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[33:36]) == 1)],
+    sexo_idade == "M_FE4" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[37:40]) == 1)],
+    sexo_idade == "M_FE5" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[41:44]) == 1)],
+    sexo_idade == "M_FE6" ~ c('Renda 1', 'Renda 2', 'Renda 3', 'Renda 4')[which(rmultinom(1, 1, probs_renda$prop[45:48]) == 1)]
+  )
+}
+```
+
+::: justify
+Em seguida, inicia-se o processo de construção de uma população virtua: primeiro serão simuladas a faixa etária e o sexo dos agentes e, em seguida, sua categoria de renda. Este processo ainda não realiza a alocação dos agentes no grid, mas, uma vez que possuírem uma renda, podem ser sorteados aleatoriamente para alguma das células referentes à sua renda.
+:::
+
+```{r}
+# Definindo o número de agentes
+n_agentes = 1000
+
+# Criando um data.frame
+agentes = data.frame(
+  id = 1:n_agentes
+)
+
+# Gerando o sexo e a faixa etária
+agentes$sexo_idade = sample(c("F_FE1", "F_FE2", "F_FE3", "F_FE4", "F_FE5", "F_FE6",
+                     "M_FE1", "M_FE2", "M_FE3", "M_FE4", "M_FE5", "M_FE6"),
+                   n_agentes, replace = T,
+                   prob = c(0.054,0.111,0.112,0.113,0.088,0.03,
+                            0.047,0.117,0.113,0.107,0.082,0.026))
+  
+# Simulando a renda com a função anterior
+agentes$renda = purrr::map_chr(agentes$sexo_idade, f_renda)
+
+sorteia_celula = function(phi_cat){
+  dplyr::case_when(
+    phi_cat == 'Renda 1' ~ sample(grid[grid$phi_cat == "Renda 1",]$id, 1),
+    phi_cat == 'Renda 2' ~ sample(grid[grid$phi_cat == "Renda 2",]$id, 1),
+    phi_cat == 'Renda 3' ~ sample(grid[grid$phi_cat == "Renda 3",]$id, 1),
+    phi_cat == 'Renda 4' ~ sample(grid[grid$phi_cat == "Renda 4",]$id, 1)
+  )
+}
+
+# Sorteando a célula
+agentes$grid = purrr::map_int(agentes$renda, sorteia_celula)
+
+# Unindo a informação do grid com o agente
+agentes = left_join(agentes, grid, by = c('grid' = 'id'))
+```
+
+```{r}
+grid |> 
+  ggplot(aes(x=x, y=y)) +
+  geom_raster(aes(fill = phi_cat)) +
+  theme_bw() +
+  ggtitle("Distribuição dos agentes pela renda") +
+  geom_jitter(data = agentes, aes(x = x, y = y, fill = phi_cat), shape = 21)
+```
+
+## Definindo um buffer para construir a rede social
+
+::: justify
+Uma possível estrategia para definir a rede social dos agentes envolve definir um buffer nas células ao redor do agente e sortear seus contatos dentro do seu respectivo buffer. A definição do buffer permite que o agente possivelmente tenha agentes de outras faixas de renda em sua rede social, sendo este um comportamento que se aproxima mais da realidade. 
+
+O primeiro passo para construir este buffer é calcular as distâncias entre todos os pares de células. Isso é feito aproveitando a matriz de distâncias calculada no momento em que os dados espacialmente autocorrelacionados foram simulados.
+:::
+
+```{r}
+distancias = data.frame(
+  x= rep(1:625, each = 625),
+  y = rep(1:625, 625),
+  dist = c(distance)
+)
+
+ggplot(distancias) +
+  geom_histogram(aes(x = dist), color = 'black', fill = 'lightblue',
+                 bins = 40) +
+  theme_bw() +
+  ggtitle("Histograma da distância entre as células") +
+  labs(x = 'Distância', y = 'Frequência') +
+  geom_vline(xintercept = c(2.5, 5, 7.5, 10), color = 'red',
+             linewidth = 1, linetype = 'dashed')
+
+distancias |> 
+  filter(x == 465) |> 
+  mutate(x = rep(1:25, each = 25), y = rep(1:25, 25)) |> 
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = dist)) +
+  theme_classic() +
+  ggtitle("Distribuição da distância em relação à célula 465")
+```
+
+::: justify
+A partir do histograma das distâncias foram definidos quatro tamanhos para o buffers em torno das células, a ideia é que o buffer tenha área o suficiente para garantir uma população de tamanho razoável para o sorteio dos contatos e que consiga capturar uma população com boa variabilidade de renda dentro do buffer (idealmente, pegando pelo menos duas faixas de renda).
+:::
+
+```{r}
+b1 = distancias |> 
+  filter(x == 465) |> 
+  mutate(x = rep(1:25, each = 25), y = rep(1:25, 25),
+         dist = ifelse(dist < 2.5, 'Buffer', 'Fora do buffer')) |> 
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = dist)) +
+  theme_classic() +
+  ggtitle("Dist < 2.5") +
+  theme(legend.position = 'bottom') +
+  geom_jitter(data = agentes, aes(x = x, y = y), shape = 21)
+
+b2 = distancias |> 
+  filter(x == 465) |> 
+  mutate(x = rep(1:25, each = 25), y = rep(1:25, 25),
+         dist = ifelse(dist < 5, 'Buffer', 'Fora do buffer')) |> 
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = dist)) +
+  theme_classic() +
+  ggtitle("Dist < 5") +
+  theme(legend.position = 'bottom') +
+  geom_jitter(data = agentes, aes(x = x, y = y), shape = 21)
+
+b3 = distancias |> 
+  filter(x == 465) |> 
+  mutate(x = rep(1:25, each = 25), y = rep(1:25, 25),
+         dist = ifelse(dist < 7.5, 'Buffer', 'Fora do buffer')) |> 
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = dist)) +
+  theme_classic() +
+  ggtitle("Dist < 7.5") +
+  theme(legend.position = 'bottom') +
+  geom_jitter(data = agentes, aes(x = x, y = y), shape = 21)
+
+b4 = distancias |> 
+  filter(x == 465) |> 
+  mutate(x = rep(1:25, each = 25), y = rep(1:25, 25),
+         dist = ifelse(dist < 10, 'Buffer', 'Fora do buffer')) |> 
+  ggplot() +
+  geom_raster(aes(x = x, y = y, fill = dist)) +
+  theme_classic() +
+  ggtitle("Dist < 10") +
+  theme(legend.position = 'bottom') +
+  geom_jitter(data = agentes, aes(x = x, y = y), shape = 21)
+
+
+cowplot::plot_grid(b1, b2, b3, b4, ncol = 2)
+```
+
+::: justify
+No exemplo anterior, o buffer foi construído tomando como base a célula 465 incluindo todas as células com distância abaixo de 2,5, 5, 7,5 e 10. Em seguida, serão analisados os buffers de tamanho 5 e tamanho 10 para verificar a população de agentes disponível para sortear os contatos e a maneira com que a renda estaria distribuída entre os mesmos.
+:::
+
+```{r}
+g1 = left_join(agentes, distancias |> mutate(grid = rep(1:625, 625)) |> filter(x == 465), by = c('grid')) |> 
+  filter(dist < 5) |> 
+  mutate(foco = ifelse(grid == 465, "Agente central", "Vizinhos") |> factor()) |> 
+  ggplot() +
+  geom_point(aes(x = x.x, y = y.x, color = renda, shape = foco)) +
+  ylim(0, 25) + xlim(0, 25) +
+  theme_classic() +
+  labs(x = 'x', y = 'y') +
+    ggtitle("Dist < 5") +
+    theme(legend.position = 'bottom')
+
+g2 = left_join(agentes, distancias |> mutate(grid = rep(1:625, 625)) |> filter(x == 465), by = c('grid')) |> 
+  filter(dist < 10) |> 
+  mutate(foco = ifelse(grid == 465, "Agente central", "Vizinhos") |> factor()) |> 
+  ggplot() +
+  geom_point(aes(x = x.x, y = y.x, color = renda, shape = foco)) +
+  ylim(0, 25) + xlim(0, 25) +
+  theme_classic() +
+  labs(x = 'x', y = 'y') +
+    ggtitle("Dist < 10") +
+    theme(legend.position = 'bottom')
+
+cowplot::plot_grid(g1, g2, ncol = 2)
+```
+
+::: justify
+Observando a distribuição de renda dos vizinhos, nota-se que, após um determinado tamanho de buffer, já se captura uma distribuição mais parecida com a da população completa de agentes.
+:::
+
+```{r}
+g0 = left_join(agentes, distancias |> mutate(grid = rep(1:625, 625)) |> filter(x == 465), by = c('grid')) |> 
+  mutate(foco = ifelse(grid == 465, "Agente central", "Vizinhos") |> factor()) |> 
+  group_by(renda) |> 
+  tally() |> 
+  ggplot() +
+  geom_col(aes(x = renda, y = n, fill = renda)) +
+  theme_classic() +
+  labs(x = "Categoria de renda", y = 'Quantidade de agentes')  +
+    ggtitle("Todos os agentes")  +
+    theme(legend.position = 'bottom')
+
+g1 = left_join(agentes, distancias |> mutate(grid = rep(1:625, 625)) |> filter(x == 465), by = c('grid')) |> 
+  filter(dist < 5) |> 
+  mutate(foco = ifelse(grid == 465, "Agente central", "Vizinhos") |> factor()) |> 
+  group_by(renda) |> 
+  tally() |> 
+  ggplot() +
+  geom_col(aes(x = renda, y = n, fill = renda)) +
+  theme_classic() +
+  labs(x = "Categoria de renda", y = 'Quantidade de agentes')  +
+    ggtitle("Dist < 5")  +
+    theme(legend.position = 'bottom')
+
+g2 = left_join(agentes, distancias |> mutate(grid = rep(1:625, 625)) |> filter(x == 465), by = c('grid')) |> 
+  filter(dist < 10) |> 
+  mutate(foco = ifelse(grid == 465, "Agente central", "Vizinhos") |> factor()) |> 
+  group_by(renda) |> 
+  tally() |> 
+  ggplot() +
+  geom_col(aes(x = renda, y = n, fill = renda)) +
+  theme_classic() +
+  labs(x = "Categoria de renda", y = 'Quantidade de agentes')  +
+    ggtitle("Dist < 10")  +
+    theme(legend.position = 'bottom')
+
+cowplot::plot_grid(g0, g1, g2, ncol = 3)
+```
+
+::: justify
+Deste modo, o processo de seleção dos contatos de cada agente pode ser resumido nas seguintes etapas:
+ 
+1. A população do sorteio será composta por todos os agentes cuja distância entre a célula em que está localizado e a célula do agente $i$ seja menor que $B$ (valor do buffer), ou seja, $dist(i, j) <= B$.
+2. Sortear os $k$ agentes que farão parte da rede social. Os agentes podem ter a mesma probabilidade de serem sorteados ou a renda pode ser um fator na probabilidade do sorteio (rendas mais parecidas, tem maior probabilidade de serem sorteadas).
+:::
+
+```{r}
+sorteia_rede_social = function(agentes, distancias, rede, buffer = 4){
+  
+  # Criando uma lista com as posições dos agentes
+  lista_pos_agente = unique(agentes$grid)
+  
+  
+  
+  # A cada iteração temos que remover o agente do sorteio 
+  
+  agente_dist = left_join(agentes, distancias |> mutate(grid = rep(1:625, 625)) |> filter(x == lista_pos_agente[1], by = c('grid'))) |> 
+    filter(id != 1) |> 
+    filter(dist <= buffer)
+  
+  
+  
+  
+  
+}
+```
+
