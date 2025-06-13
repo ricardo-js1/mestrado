@@ -121,23 +121,23 @@ gera_pop = function(n_agentes){
   # Gerando a estrutura de rede social entre os agentes
   
   # Inicializando a matriz de vizinhança
-  rede_social = matrix(0, nrow = n_agentes, ncol = n_agentes)
+  # rede_social = matrix(0, nrow = n_agentes, ncol = n_agentes)
   
   # Preenchendo a matriz de rede social
-  for(i in 1:n_agentes){
-    
-    # A cada iteração, o agente i é removido do sorteio, assim ele não
-    # pode fazer parte de sua própria rede social
-    agentes = sample(c(1:n_agentes)[-i], size = 2, replace = F)
-    
-    # Os pares i,j e j,i devem ser iguais a 1 para estabelecer o contato na rede
-    rede_social[i, agentes] = 1
-    rede_social[agentes, i] = 1
-    
-  }
+  # for(i in 1:n_agentes){
+  #   
+  #   # A cada iteração, o agente i é removido do sorteio, assim ele não
+  #   # pode fazer parte de sua própria rede social
+  #   agentes = sample(c(1:n_agentes)[-i], size = 2, replace = F)
+  #   
+  #   # Os pares i,j e j,i devem ser iguais a 1 para estabelecer o contato na rede
+  #   rede_social[i, agentes] = 1
+  #   rede_social[agentes, i] = 1
+  #   
+  # }
   
   # Número de contatos na rede social
-  rede = rowSums(rede_social)
+  # rede = rowSums(rede_social)
   
   # Atribuindo o grupo
   grupo = ifelse(pas < 120, 119, 139)
@@ -174,10 +174,14 @@ gera_pop = function(n_agentes){
   prob_af = ifelse(prob_af > 1, 0.85, prob_af)
   prob_af = ifelse(prob_af < 0, 0.15, prob_af)
   
-  pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, grupo, rede, prob_af, prob_dieta)
+  pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, grupo, prob_af, prob_dieta)
   
   # Exportando uma lista com a população simulada e a matriz da rede social
-  return(list(pop_sim, rede_social))
+  return(pop_sim)
   
 }
+
+# Testando
+
+pop_teste = gera_pop(n_agentes = 1000)
 
