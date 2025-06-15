@@ -19,51 +19,52 @@ atualiza_idade = function(pop, probs = sobrevida, idademax = 100){
   
 }
 
-atualiza_imc = function(pop){
-  
 
-    pop$imc = ifelse(pop$morto == 0, 
-                     ifelse(
-      pop$sexo == 'M',
-      pop$imc + 0.312 - 0.006712 + 0.00004288 - (2 * 0.006712 * (pop$idade - 18)) - (3 * 0.00004288 * (pop$idade - 18)) +
-        (3 * 0.00004288 * (pop$idade - 18)^2) + rnorm(1, 0, abs(0.312 - 0.006712 + 0.00004288 - (2 * 0.006712 * (pop$idade - 18)) - (3 * 0.00004288 * (pop$idade - 18)) +
-                                                           (3 * 0.00004288 * (pop$idade - 18)^2))),
-      
-      pop$imc + 0.186 - 0.0003295 - 0.00002687- (2 * 0.0003295 * (pop$idade - 18)) - (3 * 0.00002687 * (pop$idade - 18)) +
-        (3 * 0.00002687 * (pop$idade - 18)^2) + rnorm(1, 0, abs(0.186 - 0.0003295 - 0.00002687- (2 * 0.0003295 * (pop$idade - 18)) - (3 * 0.00002687 * (pop$idade - 18)) +
-                                                           (3 * 0.00002687 * (pop$idade - 18)^2)))
-    ), pop$imc)
-    
-  
-  return(pop)
-  
-}
 
-atualiza_pas = function(morto, sexo, grupo, idade, pas){
+
+atualiza_pas = function( sexo, grupo, idade, pas){
   
   # Atualizando a pressão arterial sistólica
-    pas = dplyr::case_when(
-      morto == 0 & sexo == 'M' & grupo == 119 ~ pas + 0.47 + 0.014 + 2 * 0.014 * (idade - 60) + rnorm(1, 0, abs(0.47 + 0.014 + 2 * 0.014 * (idade - 60))),
-      morto == 0 & sexo == 'M' & grupo == 139 ~ pas + 0.61 + 0.006 + 2 * 0.006 * (idade - 60) + rnorm(1, 0, abs(0.61 + 0.006 + 2 * 0.006 * (idade - 60))),
-      morto == 0 & sexo == 'F' & grupo == 119 ~ pas + 0.62 + 0.013 + 2 * 0.013 * (idade - 60) + rnorm(1, 0, abs(0.62 + 0.013 + 2 * 0.013 * (idade - 60))),
-      morto == 0 & sexo == 'F' & grupo == 139 ~ pas + 0.89 + 0.009 + 2 * 0.009 * (idade - 60) + rnorm(1, 0, abs(0.89 + 0.009 + 2 * 0.009 * (idade - 60)))
-    )
-    
+  pas = dplyr::case_when(
+    sexo == 'M' & grupo == 119 ~ pas + 0.47 + 0.014 + 2 * 0.014 * (idade - 60) + rnorm(1, 0, abs(0.47 + 0.014 + 2 * 0.014 * (idade - 60))),
+    sexo == 'M' & grupo == 139 ~ pas + 0.61 + 0.006 + 2 * 0.006 * (idade - 60) + rnorm(1, 0, abs(0.61 + 0.006 + 2 * 0.006 * (idade - 60))),
+    sexo == 'F' & grupo == 119 ~ pas + 0.62 + 0.013 + 2 * 0.013 * (idade - 60) + rnorm(1, 0, abs(0.62 + 0.013 + 2 * 0.013 * (idade - 60))),
+    sexo == 'F' & grupo == 139 ~ pas + 0.89 + 0.009 + 2 * 0.009 * (idade - 60) + rnorm(1, 0, abs(0.89 + 0.009 + 2 * 0.009 * (idade - 60)))
+  )
+  
+  return(pas)
+  
 }
 
-atualiza_pad = function(morto, sexo, grupo, idade, pad){
+atualiza_pad = function(sexo, grupo, idade, pad){
   
   # Atualizando a pressão arterial diastólica
   pad = dplyr::case_when(
-    morto == 0 & sexo == 'M' & grupo == 119 ~ pad - 0.21 - 0.005 - 2 * 0.005 * (idade - 60) + rnorm(1, 0, abs(-0.21 - 0.005 - 2 * 0.005 * (idade - 60))),
-    morto == 0 & sexo == 'M' & grupo == 139 ~ pad - 0.26 - 0.01 - 2 * 0.01 * (idade - 60) + rnorm(1, 0, abs(-0.26 - 0.01 - 2 * 0.01 * (idade - 60))),
-    morto == 0 & sexo == 'F' & grupo == 119 ~ pad - 0.18 - 0.008 - 2 * 0.008 * (idade - 60) + rnorm(1, 0, abs(-0.18 - 0.008 - 2 * 0.008 * (idade - 60))),
-    morto == 0 & sexo == 'F' & grupo == 139 ~ pad - 0.10 - 0.012 - 2 * 0.012 * (idade - 60) + rnorm(1, 0, abs(- 0.10 - 0.012 - 2 * 0.012 * (idade - 60)))
+    sexo == 'M' & grupo == 119 ~ pad + 0.21 + 0.005 + 2 * 0.005 * (idade - 60) + rnorm(1, 0, abs(+0.21 + 0.005 + 2 * 0.005 * (idade - 60))),
+    sexo == 'M' & grupo == 139 ~ pad + 0.26 + 0.01 + 2 * 0.01 * (idade - 60) + rnorm(1, 0, abs(+0.26 + 0.01 + 2 * 0.01 * (idade - 60))),
+    sexo == 'F' & grupo == 119 ~ pad + 0.18 + 0.008 + 2 * 0.008 * (idade - 60) + rnorm(1, 0, abs(+0.18 + 0.008 + 2 * 0.008 * (idade - 60))),
+    sexo == 'F' & grupo == 139 ~ pad + 0.10 + 0.012 + 2 * 0.012 * (idade - 60) + rnorm(1, 0, abs(+ 0.10 + 0.012 + 2 * 0.012 * (idade - 60)))
     )
   
   pad = ifelse(pad < 45, 45, pad)
   
 }
+
+atualiza_imc = function(sexo, idade, imc){
+  
+  # Atualizando o imc
+  delta_imc = dplyr::case_when(
+    sexo == 'M' ~ 0.0312 - 0.00671 + 0.0000429 + 2 * 0.00671 * (idade - 18) + 3 * 0.0000429 * (idade - 18)^2,
+    sexo == "F" ~ 0.0186 - 0.00033 - 0.0000269 - 2 * 0.00033 * (idade - 18) - 3 * 0.0000269 * (idade - 18)^2
+  )
+  
+  imc = imc + delta_imc + rnorm(1, 0, abs(delta_imc))
+  
+  return(imc)
+  
+}
+
+# beta1 + beta 2 + beta3 + 2beta2*idade + 3beta3*idade^2
 
 atualiza_risco = function(pop){
   
