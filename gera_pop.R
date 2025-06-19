@@ -98,12 +98,12 @@ gera_pop = function(n_agentes){
       sexo_idade == "F_FE4" ~ MASS::mvrnorm(1, c(127, 81), matrix(c(18.7^2, 0.75*18.7*11.1, 0.75*18.7*11.1, 11.1^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE5" ~ MASS::mvrnorm(1, c(137, 82), matrix(c(20.4^2, 0.75*20.4*11.3, 0.75*20.4*11.3, 11.3^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
       sexo_idade == "F_FE6" ~ MASS::mvrnorm(1, c(145, 81), matrix(c(23.5^2, 0.75*23.5*11.7, 0.75*23.5*11.7, 11.7^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE1" ~ MASS::mvrnorm(1, c(124, 70), matrix(c(13.7^2, 0.75*13.7*8.3, 0.75*13.7*8.3, 8.3^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE2" ~ MASS::mvrnorm(1, c(125, 73), matrix(c(13.7^2, 0.75*13.7*9.4, 0.75*13.7*9.4, 9.4^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE3" ~ MASS::mvrnorm(1, c(126, 77), matrix(c(14.3^2, 0.75*14.3*10.7, 0.75*14.3*10.7, 10.7^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE4" ~ MASS::mvrnorm(1, c(131, 81), matrix(c(18.1^2, 0.75*18.1*11.1, 0.75*18.1*11.1, 11.1^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE5" ~ MASS::mvrnorm(1, c(137, 82), matrix(c(18.9^2, 0.75*18.9*11.3, 0.75*18.9*11.3, 11.3^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE6" ~ MASS::mvrnorm(1, c(142, 81), matrix(c(22^2, 0.75*22*11.7, 0.75*22*11.7, 11.7^2), 2, 2, byrow = T)) |> paste0(collapse = ';')
+      sexo_idade == "M_FE1" ~ MASS::mvrnorm(1, c(124, 76), matrix(c(13.7^2, 0.75*13.7*8.3, 0.75*13.7*8.3, 8.3^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE2" ~ MASS::mvrnorm(1, c(125, 79), matrix(c(13.7^2, 0.75*13.7*9.4, 0.75*13.7*9.4, 9.4^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE3" ~ MASS::mvrnorm(1, c(126, 82), matrix(c(14.3^2, 0.75*14.3*10.7, 0.75*14.3*10.7, 10.7^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE4" ~ MASS::mvrnorm(1, c(131, 85), matrix(c(18.1^2, 0.75*18.1*11.1, 0.75*18.1*11.1, 11.1^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE5" ~ MASS::mvrnorm(1, c(137, 84), matrix(c(18.9^2, 0.75*18.9*11.3, 0.75*18.9*11.3, 11.3^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE6" ~ MASS::mvrnorm(1, c(142, 82), matrix(c(22^2, 0.75*22*11.7, 0.75*22*11.7, 11.7^2), 2, 2, byrow = T)) |> paste0(collapse = ';')
     )
   
   }
@@ -116,7 +116,7 @@ gera_pop = function(n_agentes){
   
   # Gerando os hipertensos
   # Código 9 para quem é hipertenso em t0
-  has = ifelse(pad >= 140 | pad >= 90, 9, 0) 
+  has = ifelse(pas >= 140 | pad >= 90, 9, 0) 
   
   # Gerando a estrutura de rede social entre os agentes
   

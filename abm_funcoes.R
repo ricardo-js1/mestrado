@@ -64,7 +64,23 @@ atualiza_imc = function(sexo, idade, imc){
   
 }
 
-# beta1 + beta 2 + beta3 + 2beta2*idade + 3beta3*idade^2
+
+atualiza_morto = function(idade_agente, sexo_agente){
+  
+  prob = sobrevida %>% filter(sexo == sexo_agente & idade == idade_agente)
+  
+  rbinom(1, 1, prob$prob)
+  
+}
+
+atualiza_morto = function(idade_agente, sexo_agente){
+  
+  probs <- data.frame(idade = idade_agente, sexo = sexo_agente) %>%
+    left_join(sobrevida, by = c("idade", "sexo"))
+  
+  rbinom(nrow(probs), 1, probs$prob)
+  
+}
 
 atualiza_risco = function(pop){
   
@@ -181,4 +197,19 @@ atualiza_inter = function(pop, ...){
   
 }
 
+atualiza_has = function(idade, sexo, fumante, hist_fam, imc, pas, pad) {
+  
+  sexo_bin  = ifelse(sexo == 2, 1, 0)
+  hist_fam_bin = ifelse(hist_fam == 0, 0, 1)
 
+  coef = 22.94954 - 0.15641 * idade - 0.20293 * sexo_bin - 0.19073 * fumante -
+    0.16612 * hist_fam_bin - 0.03388 * imc - 0.05933 * pas - 0.128468 * pad +
+    0.001624 * pad * idade
+  
+  prob = 1 - exp(-exp(log(1) - coef) / 0.87692)
+  
+  rbinom(length(prob), 1, prob)
+  
+}
+
+atualiza_has(pop$idade, pop$sexo, pop$fumante, pop$hist_fam, pop$imc, pop$pas, pop$pad) %>% table()
