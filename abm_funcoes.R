@@ -206,10 +206,8 @@ atualiza_has = function(idade, sexo, fumante, hist_fam, imc, pas, pad) {
     0.16612 * hist_fam_bin - 0.03388 * imc - 0.05933 * pas - 0.128468 * pad +
     0.001624 * pad * idade
   
-  prob = 1 - exp(-exp(log(1) - coef) / 0.87692)
+  prob = 1 - exp(-exp((log(1) - coef) / 0.87692))
   
   rbinom(length(prob), 1, prob)
   
 }
-
-atualiza_has(pop$idade, pop$sexo, pop$fumante, pop$hist_fam, pop$imc, pop$pas, pop$pad) %>% table()

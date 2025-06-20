@@ -1,5 +1,4 @@
 sobrevida = read.csv2('dados/sobrevida.csv') %>% 
-  select(-total) %>% 
   pivot_longer(cols = !'idade', names_to = 'sexo', values_to = 'prob')
 
 abm_teste = function(pop, limite_pop = 0.1){
@@ -11,6 +10,7 @@ abm_teste = function(pop, limite_pop = 0.1){
   pad = c()
   tamanho_pop = nrow(pop)
   pop_restante = c()
+  pop_iter = c()
   pop_inicial = nrow(pop)
   hipertensos = c()
   taxa = c()
@@ -21,11 +21,13 @@ abm_teste = function(pop, limite_pop = 0.1){
   pop = pop[pop$has != 9,]
   
 #  for(i in 1:k){
-  while(tamanho_pop/pop_inicial >= limite_pop){
+  while(tamanho_pop/pop_inicial >= limite_pop & i <= 100){
 
     iter[i] = i
     
     # Ciclos de atualização
+    
+    pop_iter[i] = nrow(pop)
     
     # atualizando quem morreu
     pop$morte = atualiza_morto(pop$idade, pop$sexo)
@@ -59,7 +61,7 @@ abm_teste = function(pop, limite_pop = 0.1){
     hipertensos[i] = nrow(pop[pop$has == 1,])
     tamanho_pop = nrow(pop)
     pop_restante[i] = nrow(pop)
-    taxa[i] = hipertensos[i]/(hipertensos[i] + pop_restante[i]) 
+    taxa[i] = hipertensos[i]/(pop_iter[i]) 
     
     # excluindo os hipertensos
     pop = pop[pop$has != 1,]
@@ -75,17 +77,21 @@ abm_teste = function(pop, limite_pop = 0.1){
 abm_teste(pop_teste, limite_pop = 0.1) 
 
 
-# absim = data.frame()
-# for(i in 1:250){
-#   print(i)
-#   a = abm_teste(pop_teste, limite_pop = 0.1) 
-#   a$run = i
-#   absim = bind_rows(absim, a)
-#   
-# }
-# 
-# absim %>% 
-#   group_by(iter) %>% 
-#   summarise(taxa = median(taxa)) %>% 
-#   ggplot(aes(x = iter, y = taxa)) +
-#   geom_line()
+absim = data.frame()
+for(i in 1:1000){
+  print(i)
+  a = abm_teste(pop_teste, limite_pop = 0.1)
+  a$run = i
+  absim = bind_rows(absim, a)
+
+}
+
+
+absim %>%
+  ggplot(aes(x = iter, y = taxa, group = run)) +
+  geom_line() +
+  stat_summary(aes(group = 1, color = "Mediana"), fun = median, geom = "line", 
+               size = 0.8) +
+  stat_summary(aes(group = 1, 
+                   color = "Média"), fun = mean, geom = "line",  size = 0.8) +
+  legend()

@@ -29,7 +29,9 @@ gera_pop = function(n_agentes){
   idade = purrr::map_dbl(idade_cat, f_idade)
   
   # Calculando os pesos amostrais
-  peso = n_agentes/table(sexo, idade_cat)
+  peso = n_agentes/table(sexo, idade_cat) 
+  peso = data.frame(peso)
+  peso$idade_sexo = paste0(peso$sexo,"_",peso$idade_cat)
   
   # Gerando o histórico familiar
   hist_fam = sample(c(0, 1, 2), n_agentes, replace = T, c(0.057, 0.34, 0.603))
@@ -38,18 +40,18 @@ gera_pop = function(n_agentes){
   # A parte que usa o peso estava comentada no código original
   f_imc = function(sexo_idade){
     dplyr::case_when(
-      sexo_idade == "F_FE1" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.042684237,0.009838661,0.002935571)) == 1)],
-      sexo_idade == "F_FE2" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.073310934,0.031578673,0.01199731)) == 1)],
-      sexo_idade == "F_FE3" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.069456412,0.033180011,0.011557417)) == 1)],
-      sexo_idade == "F_FE4" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.06321826,0.028554213,0.018096166)) == 1)],
-      sexo_idade == "F_FE5" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.041827408,0.028838916,0.011561522)) == 1)],
-      sexo_idade == "F_FE6" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.015781971,0.009269922,0.002959004)) == 1)],
-      sexo_idade == "M_FE1" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.026310992,0.01484585,0.004550715)) == 1)],
-      sexo_idade == "M_FE2" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.045189596,0.047650005,0.018598202)) == 1)],
-      sexo_idade == "M_FE3" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.042813629,0.050066312,0.017916281)) == 1)],
-      sexo_idade == "M_FE4" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.03896837,0.043086307,0.028052634)) == 1)],
-      sexo_idade == "M_FE5" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.025782834,0.043515905,0.017922644)) == 1)],
-      sexo_idade == "M_FE6" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, c(0.009728165,0.013987663,0.004587041)) == 1)]
+      sexo_idade == "F_FE1" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "F_FE1"] * c(0.042684237,0.009838661,0.002935571)) == 1)],
+      sexo_idade == "F_FE2" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "F_FE2"] * c(0.073310934,0.031578673,0.01199731)) == 1)],
+      sexo_idade == "F_FE3" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "F_FE3"] * c(0.069456412,0.033180011,0.011557417)) == 1)],
+      sexo_idade == "F_FE4" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "F_FE4"] * c(0.06321826,0.028554213,0.018096166)) == 1)],
+      sexo_idade == "F_FE5" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "F_FE5"] * c(0.041827408,0.028838916,0.011561522)) == 1)],
+      sexo_idade == "F_FE6" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "F_FE6"] * c(0.015781971,0.009269922,0.002959004)) == 1)],
+      sexo_idade == "M_FE1" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "M_FE1"] * c(0.026310992,0.01484585,0.004550715)) == 1)],
+      sexo_idade == "M_FE2" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "M_FE2"] * c(0.045189596,0.047650005,0.018598202)) == 1)],
+      sexo_idade == "M_FE3" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "M_FE3"] * c(0.042813629,0.050066312,0.017916281)) == 1)],
+      sexo_idade == "M_FE4" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "M_FE4"] * c(0.03896837,0.043086307,0.028052634)) == 1)],
+      sexo_idade == "M_FE5" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "M_FE5"] * c(0.025782834,0.043515905,0.017922644)) == 1)],
+      sexo_idade == "M_FE6" ~ c('IMC1', 'IMC2', 'IMC3')[which(rmultinom(1, 1, peso$Freq[peso$idade_sexo == "M_FE6"] * c(0.009728165,0.013987663,0.004587041)) == 1)]
     )
   }
   
@@ -183,5 +185,6 @@ gera_pop = function(n_agentes){
 
 # Testando
 
-pop_teste = gera_pop(n_agentes = 1000)
+pop_teste = gera_pop(n_agentes = 10000)
 
+hist(pop_teste$imc)
