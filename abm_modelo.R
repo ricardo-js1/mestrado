@@ -1,7 +1,16 @@
 sobrevida = read.csv2('dados/sobrevida.csv') %>% 
   pivot_longer(cols = !'idade', names_to = 'sexo', values_to = 'prob')
 
-abm_teste = function(pop, limite_pop = 0.1){
+abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
+                     pop_alvo = 1, t_ini = 0, t_fim = 100){
+  
+  # Variáveis do modelo
+  pop$atividade_fisica = 0
+  pop$dieta = 0
+  pop$ured = 0
+  pop$tdi = 0
+  pop$imc0 = 0
+  pop$cont = 0
   
   # Iniciando os monitores
   idade = c()
@@ -21,7 +30,7 @@ abm_teste = function(pop, limite_pop = 0.1){
   pop = pop[pop$has != 9,]
   
 #  for(i in 1:k){
-  while(tamanho_pop/pop_inicial >= limite_pop & i <= 100){
+  while(tamanho_pop/pop_inicial >= limite_pop & i <= max_iter){
 
     iter[i] = i
     

@@ -176,7 +176,12 @@ gera_pop = function(n_agentes){
   prob_af = ifelse(prob_af > 1, 0.85, prob_af)
   prob_af = ifelse(prob_af < 0, 0.15, prob_af)
   
-  pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, grupo, prob_af, prob_dieta)
+  # variáveis usadas durante a simulação
+  risco = 0
+  tdiimc = 0
+  
+  pop_sim = data.frame(id, sexo, idade, hist_fam, imc, fumante, pas, pad, has, grupo, prob_af, prob_dieta,
+                       risco, tdiimc)
   
   # Exportando uma lista com a população simulada e a matriz da rede social
   return(pop_sim)

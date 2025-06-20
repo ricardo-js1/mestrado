@@ -111,91 +111,91 @@ sorteia_interv = function(pop){
   return(pop)
   
 }
-
-atualiza_inter = function(pop, ...){
-  
-  n_pop = nrow(pop)
-  
-  if(pop['sorteado'] %in% 1){
-    
-    if(pop["ativ_fisica"] %in% 1){prob_af = pop['prob_af']} else {prob_af = 1.1 * pop["prob_af"]}
-    
-    # Primeiro decide se faz AF
-    pop['ativ_fisica'] = rbinom(n_pop, 1, prob_af)
-    
-    # Decidindo se faz dieta
-    pop$dieta = rbinom(1, 1, ifelse(pop$dieta == 1, pop$prob_dieta, 1.15 * pop$prob_dieta))
-    
-    aftodoano = rbinom(1,1,0.5)
-    dtodoano = rbinom(1,1,0.5)
-    
-    if(pop$ativ_fisica == 1 & pop$dieta == 1){
-      
-      red = rnorm(1, 4.2, 0.4)
-      red2 = rnorm(1, 4.2, 0.4) * aftodoano * dtodoano
-      pop$ured = red + red2
-      pop$imc = pop$imc - red - red2
-      
-    } else
-      if(pop$ativ_fisica == 1 & pop$dieta == 0){
-        
-        red = rnorm(1, 0.8, 0.1)
-        red2 = rnorm(1, 0.8, 0.1) * aftodoano 
-        pop$ured = red + red2
-        pop$imc = pop$imc - red - red2
-        
-      } else 
-        if(pop$ativ_fisica == 0 & pop$dieta == 1){
-          
-          red = rnorm(1, 4, 0.4)
-          red2 = rnorm(1, 4, 0.4) * dtodoano
-          pop$ured = red + red2
-          pop$imc = pop$imc - red - red2
-          
-        } else {
-        
-          if(pop$tdi > 0 & pop$tdi <= wear_off){
-            
-            pop$imc = pop$imc - pop$ured / pop$tdi
-            pop$tdi = pop$tdi + 1
-            
-          }
-          
-          if(pop$tdi > wear_off){
-            
-            pop$tdi = 0
-            
-          }
-          
-        }
-    
-    if(pop$ativ_fisica == 1 | pop$dieta == 1){
-      
-      pop$cont = pop$cont + 1
-      
-      if(pop$imc < imc_min & pop$tdi_imc == 0){
-        
-        pop$tdi_imc = 1
-        
-      }
-      
-      pop$tdi = 1
-      
-      if(pop$tdi == 1){
-        
-        pop$imc = pop$imc
-        
-      }
-      
-      
-    }
-    
-    
-  }
-  
-  return(pop)
-  
-}
+# 
+# atualiza_inter = function(pop, ...){
+#   
+#   n_pop = nrow(pop)
+#   
+#   if(pop['sorteado'] %in% 1){
+#     
+#     if(pop["ativ_fisica"] %in% 1){prob_af = pop['prob_af']} else {prob_af = 1.1 * pop["prob_af"]}
+#     
+#     # Primeiro decide se faz AF
+#     pop['ativ_fisica'] = rbinom(n_pop, 1, prob_af)
+#     
+#     # Decidindo se faz dieta
+#     pop$dieta = rbinom(1, 1, ifelse(pop$dieta == 1, pop$prob_dieta, 1.15 * pop$prob_dieta))
+#     
+#     aftodoano = rbinom(1,1,0.5)
+#     dtodoano = rbinom(1,1,0.5)
+#     
+#     if(pop$ativ_fisica == 1 & pop$dieta == 1){
+#       
+#       red = rnorm(1, 4.2, 0.4)
+#       red2 = rnorm(1, 4.2, 0.4) * aftodoano * dtodoano
+#       pop$ured = red + red2
+#       pop$imc = pop$imc - red - red2
+#       
+#     } else
+#       if(pop$ativ_fisica == 1 & pop$dieta == 0){
+#         
+#         red = rnorm(1, 0.8, 0.1)
+#         red2 = rnorm(1, 0.8, 0.1) * aftodoano 
+#         pop$ured = red + red2
+#         pop$imc = pop$imc - red - red2
+#         
+#       } else 
+#         if(pop$ativ_fisica == 0 & pop$dieta == 1){
+#           
+#           red = rnorm(1, 4, 0.4)
+#           red2 = rnorm(1, 4, 0.4) * dtodoano
+#           pop$ured = red + red2
+#           pop$imc = pop$imc - red - red2
+#           
+#         } else {
+#         
+#           if(pop$tdi > 0 & pop$tdi <= wear_off){
+#             
+#             pop$imc = pop$imc - pop$ured / pop$tdi
+#             pop$tdi = pop$tdi + 1
+#             
+#           }
+#           
+#           if(pop$tdi > wear_off){
+#             
+#             pop$tdi = 0
+#             
+#           }
+#           
+#         }
+#     
+#     if(pop$ativ_fisica == 1 | pop$dieta == 1){
+#       
+#       pop$cont = pop$cont + 1
+#       
+#       if(pop$imc < imc_min & pop$tdi_imc == 0){
+#         
+#         pop$tdi_imc = 1
+#         
+#       }
+#       
+#       pop$tdi = 1
+#       
+#       if(pop$tdi == 1){
+#         
+#         pop$imc = pop$imc
+#         
+#       }
+#       
+#       
+#     }
+#     
+#     
+#   }
+#   
+#   return(pop)
+#   
+# }
 
 atualiza_has = function(idade, sexo, fumante, hist_fam, imc, pas, pad) {
   
@@ -211,3 +211,137 @@ atualiza_has = function(idade, sexo, fumante, hist_fam, imc, pas, pad) {
   rbinom(length(prob), 1, prob)
   
 }
+
+
+atualiza_risco = function(imc, tdiimc, tempo, imc_min){
+  ifelse(imc >= imc_min, 1,
+         ifelse(imc < imc_min & tdiimc > 0 & tdiimc <= tempo, 1, 0))
+}
+
+atualiza_tdiimc = function(imc, tdiimc, tempo, imc_min){
+  ifelse(imc < imc_min & tdiimc > 0 & tdiimc <= tempo, tdiimc + 1, 0)
+}
+
+sorteia_agentes = function(id, risco, pop_alvo){
+  
+  agentes_sob_risco = id[risco == 1]
+  sorteados = sample(agentes_sob_risco, pop_alvo * sum(risco))
+  
+  return(sorteados)
+  
+}
+
+pop_teste$risco = atualiza_risco(pop_teste$imc, pop_teste$tdiimc, tempo = tempo, imc_min = 27)
+pop_teste$tdiimc = atualiza_tdiimc(pop_teste$imc, pop_teste$tdiimc, tempo = tempo, imc_min = 27)
+
+sorteados = sorteia_agentes(pop_teste$id, pop_teste$risco, pop_alvo = 1)
+
+atualiza_interv = function(pop, sorteados, imc_min, t0,
+                           t_ini = 0, t_fim = 0, wear_off = 4){
+  
+  if(pop$id %in% sorteados & (t0 >= t_ini) & (t0 <= t_fim)){
+    
+    # Decidindo se faz atividade física
+    if(pop$atividade_fisica == 0){
+     
+      # se não fazia 
+      pop$atividade_fisica = rbinom(1, ,1, pop$prob_af)
+      
+    } else {
+      
+      # se já fazia, tem o dobro de probabilidade de fazer
+      pop$atividade_fisica = rbinom(1, 1, 2 * prob_af)
+      
+    }
+    
+    # Mesma coisa para dieta
+    if(pop$dieta == 0){
+      
+      # se não fazia 
+      pop$dieta = rbinom(1, ,1, pop$prob_dieta)
+      
+    } else {
+      
+      # se já fazia, tem o dobro de probabilidade de fazer
+      pop$dieta = rbinom(1, 1, 2 * prob_dieta)
+      
+    }
+    
+    # Sorteia se a dieta e o AF vão ser feitos o ano todo ou só metade
+    aftodoano = rbinom(1, 1, 0.5)
+    dtodoano = rbinom(1, 1, 0.5)
+      
+    
+    # atualização do IMC
+    if(pop$atividade_fisica == 1 & pop$dieta == 1){
+      
+      red = rnorm(1, 4.2, 0.4)
+      red2 = rnorm(1, 4.2, 0.4) * aftodoano * dtodoano
+      
+      pop$imc = pop$imc - red - red2
+      pop$ured = red + red2
+      
+    } else 
+      if(pop$atividade_fisica == 1 & pop$dieta == 0){
+        
+        red = rnorm(1, 0.8, 0.1)
+        red2 = rnorm(1, 0.8, 0.1) * aftodoano
+        
+        pop$imc = pop$imc - red - red2
+        pop$ured = red + red2
+        
+      } else 
+        if(pop$atividade_fisica == 0 & pop$dieta == 1){
+          
+          red = rnorm(1, 4, 0.4)
+          red2 = rnorm(1, 4, 0.4) * dtodoano
+          
+          pop$imc = pop$imc - red - red2
+          pop$ured = red + red2
+          
+        } else
+          if(pop$tdi > 0 & pop$tdi <= wear_off){
+            
+            # defasagem para quem fazia exercício e parou
+            pop$imc = pop$imc0 - pop$ured/pop$tdi
+            pop$tdi = pop$tdi + 1
+            
+          }
+    
+          if(pop$tdi > wear_off){
+            
+            pop$tdi = 0
+            
+          }
+    
+  }
+  
+  if(pop$atividade_fisica == 1 | pop$dieta == 1){
+    
+    pop$cont = pop$cont + 1
+    
+    if(pop$imc < imc_min & pop$tdiimc == 0){
+      
+      pop$tdiimic = 1
+      
+    }
+    
+    pop$tdi = 1
+    
+    if(pop$tdi == 1){
+      
+      pop$imc0 = pop$imc
+      
+    }
+    
+  }
+  
+  return(pop)
+  
+}
+
+aa = atualiza_interv(pop, sorteados, imc_min = 27, t0 = 1,
+                t_ini = 1, t_fim = 100, wear_off = 4)
+
+summary(aa$imc)
+summary(pop$imc)
