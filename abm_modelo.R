@@ -1,8 +1,8 @@
-sobrevida = read.csv2('dados/sobrevida.csv') %>% 
-  pivot_longer(cols = !'idade', names_to = 'sexo', values_to = 'prob')
-
-abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
-                     pop_alvo = 1, t_ini = 0, t_fim = 100){
+abm_bellido = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
+                     pop_alvo = 1, t_ini = 0, t_fim = 100, wear_off = 4){
+  
+  pop$prob_af = 0.1
+  pop$prob_dieta = 0.1
   
   # Variáveis do modelo
   pop$atividade_fisica = 0
@@ -25,6 +25,9 @@ abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min =
   taxa = c()
   iter = c()
   i = 1
+  ativ_fis = c()
+  dieta = c()
+  
   
   # excluindo quem já começa hipertenso
   pop = pop[pop$has != 9,]
@@ -35,7 +38,6 @@ abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min =
     iter[i] = i
     
     # Ciclos de atualização
-    
     pop_iter[i] = nrow(pop)
     
     # atualizando quem morreu
@@ -59,6 +61,17 @@ abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min =
     # atualizando a pad
     pop$pad = atualiza_pad(pop$sexo, pop$grupo, pop$idade, pop$pad)
     
+    # atualizando o risco e o tdiimc
+    pop$risco = atualiza_risco(pop$imc, pop$tdiimc, tempo = tempo, imc_min = imc_min)
+    pop$tdiimc = atualiza_tdiimc(pop$imc, pop$tdiimc, tempo = tempo, imc_min = imc_min)
+    
+    # sorteando os agentes
+    sorteados = sorteia_agentes(pop$id, pop$risco, pop_alvo = pop_alvo)
+    
+    # intervindo no imc
+    pop = atualiza_interv(pop, sorteados, imc_min = imc_min, t0 = i,
+                          t_ini = t_ini, t_fim = t_fim, wear_off = wear_off)
+
     # atualizando a has
     pop$has = atualiza_has(pop$idade, pop$sexo, pop$fumante, pop$hist_fam, pop$imc, pop$pas, pop$pad)
     
@@ -71,6 +84,8 @@ abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min =
     tamanho_pop = nrow(pop)
     pop_restante[i] = nrow(pop)
     taxa[i] = hipertensos[i]/(pop_iter[i]) 
+    ativ_fis[i] = sum(pop$atividade_fisica)
+    dieta[i] = sum(pop$dieta)
     
     # excluindo os hipertensos
     pop = pop[pop$has != 1,]
@@ -79,28 +94,17 @@ abm_teste = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min =
     
   }
 
-  return(data.frame(iter, idade, imc, pas, pad, hipertensos, pop_restante, taxa))
+  return(data.frame(iter, idade, imc, pas, pad, ativ_fis, dieta, hipertensos, pop_restante, taxa))
 
 }
 
-abm_teste(pop_teste, limite_pop = 0.1) 
+# absim %>%
+#   ggplot(aes(x = iter, y = taxa, group = run)) +
+#   geom_line(alpha = 0.5) +
+#   stat_summary(aes(group = 1, color = "Mediana"), fun = median, geom = "line", 
+#                size = 0.8) +
+#   stat_summary(aes(group = 1, 
+#                    color = "Média"), fun = mean, geom = "line",  size = 0.8) +
+#   theme_classic() +
+#   theme(legend.position = 'bottom')
 
-
-absim = data.frame()
-for(i in 1:1000){
-  print(i)
-  a = abm_teste(pop_teste, limite_pop = 0.1)
-  a$run = i
-  absim = bind_rows(absim, a)
-
-}
-
-
-absim %>%
-  ggplot(aes(x = iter, y = taxa, group = run)) +
-  geom_line() +
-  stat_summary(aes(group = 1, color = "Mediana"), fun = median, geom = "line", 
-               size = 0.8) +
-  stat_summary(aes(group = 1, 
-                   color = "Média"), fun = mean, geom = "line",  size = 0.8) +
-  legend()

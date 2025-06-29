@@ -52,10 +52,9 @@ atualiza_pad = function(sexo, grupo, idade, pad){
 
 atualiza_imc = function(sexo, idade, imc){
   
-  # Atualizando o imc
   delta_imc = dplyr::case_when(
-    sexo == 'M' ~ 0.0312 - 0.00671 + 0.0000429 + 2 * 0.00671 * (idade - 18) + 3 * 0.0000429 * (idade - 18)^2,
-    sexo == "F" ~ 0.0186 - 0.00033 - 0.0000269 - 2 * 0.00033 * (idade - 18) - 3 * 0.0000269 * (idade - 18)^2
+    sexo == "M" ~ 0.312 - 0.00671 + 0.0000429 + 2 * 0.00671 * (idade - 18) + 3 * 0.0000429 * (idade - 18) + 3 * 0.0000429 * (idade - 18)^2,
+    sexo == "F" ~ 0.186 - 0.00033 - 0.0000269 - 2 * 0.00033 * (idade - 18) - 3 * 0.0000269 * (idade - 18) - 3 * 0.0000269 * (idade - 18)^2
   )
   
   imc = imc + delta_imc + rnorm(1, 0, abs(delta_imc))
@@ -80,23 +79,6 @@ atualiza_morto = function(idade_agente, sexo_agente){
   
   rbinom(nrow(probs), 1, probs$prob)
   
-}
-
-atualiza_risco = function(pop){
-  
-  pop$risco = dplyr::case_when(
-    pop$morto == 0 & pop$has == 0 & pop$imc > imc_min ~ 1,
-    pop$imc < imc_min & pop$tdi_imc > 0 & pop$tdi_imc <= tempo_max_imc ~ 0,
-    TRUE ~ 0
-  )
-  
-  pop$tdi_imc = dplyr::case_when(
-    pop$imc < imc_min & pop$tdi_imc > 0 & pop$tdi_imc <= tempo_max_imc ~ pop$tdi_imc + 1,
-    TRUE ~ 0
-  )
-  
- return(pop)
-   
 }
 
 sorteia_interv = function(pop){
@@ -231,117 +213,105 @@ sorteia_agentes = function(id, risco, pop_alvo){
   
 }
 
-pop_teste$risco = atualiza_risco(pop_teste$imc, pop_teste$tdiimc, tempo = tempo, imc_min = 27)
-pop_teste$tdiimc = atualiza_tdiimc(pop_teste$imc, pop_teste$tdiimc, tempo = tempo, imc_min = 27)
-
-sorteados = sorteia_agentes(pop_teste$id, pop_teste$risco, pop_alvo = 1)
-
 atualiza_interv = function(pop, sorteados, imc_min, t0,
                            t_ini = 0, t_fim = 0, wear_off = 4){
   
-  if(pop$id %in% sorteados & (t0 >= t_ini) & (t0 <= t_fim)){
+  # avalia 
+  wear_off_candidates <- pop$tdi > 0 & pop$tdi <= wear_off & 
+    pop$atividade_fisica == 0 & pop$dieta == 0
+  
+  if(any(wear_off_candidates)) {
+    idx_wear <- which(wear_off_candidates)
     
-    # Decidindo se faz atividade física
-    if(pop$atividade_fisica == 0){
-     
-      # se não fazia 
-      pop$atividade_fisica = rbinom(1, ,1, pop$prob_af)
-      
-    } else {
-      
-      # se já fazia, tem o dobro de probabilidade de fazer
-      pop$atividade_fisica = rbinom(1, 1, 2 * prob_af)
-      
+    for(i in idx_wear) {
+      # Apply gradual wear-off effect
+      pop$imc[i] = pop$imc0[i] - pop$ured[i] * (wear_off - pop$tdi[i]) / wear_off
+      pop$tdi[i] = pop$tdi[i] + 1
     }
-    
-    # Mesma coisa para dieta
-    if(pop$dieta == 0){
-      
-      # se não fazia 
-      pop$dieta = rbinom(1, ,1, pop$prob_dieta)
-      
-    } else {
-      
-      # se já fazia, tem o dobro de probabilidade de fazer
-      pop$dieta = rbinom(1, 1, 2 * prob_dieta)
-      
-    }
-    
-    # Sorteia se a dieta e o AF vão ser feitos o ano todo ou só metade
-    aftodoano = rbinom(1, 1, 0.5)
-    dtodoano = rbinom(1, 1, 0.5)
-      
-    
-    # atualização do IMC
-    if(pop$atividade_fisica == 1 & pop$dieta == 1){
-      
-      red = rnorm(1, 4.2, 0.4)
-      red2 = rnorm(1, 4.2, 0.4) * aftodoano * dtodoano
-      
-      pop$imc = pop$imc - red - red2
-      pop$ured = red + red2
-      
-    } else 
-      if(pop$atividade_fisica == 1 & pop$dieta == 0){
-        
-        red = rnorm(1, 0.8, 0.1)
-        red2 = rnorm(1, 0.8, 0.1) * aftodoano
-        
-        pop$imc = pop$imc - red - red2
-        pop$ured = red + red2
-        
-      } else 
-        if(pop$atividade_fisica == 0 & pop$dieta == 1){
-          
-          red = rnorm(1, 4, 0.4)
-          red2 = rnorm(1, 4, 0.4) * dtodoano
-          
-          pop$imc = pop$imc - red - red2
-          pop$ured = red + red2
-          
-        } else
-          if(pop$tdi > 0 & pop$tdi <= wear_off){
-            
-            # defasagem para quem fazia exercício e parou
-            pop$imc = pop$imc0 - pop$ured/pop$tdi
-            pop$tdi = pop$tdi + 1
-            
-          }
-    
-          if(pop$tdi > wear_off){
-            
-            pop$tdi = 0
-            
-          }
-    
   }
   
-  if(pop$atividade_fisica == 1 | pop$dieta == 1){
+  # Reset tdi for individuals who have completed wear-off period
+  pop$tdi[pop$tdi > wear_off] = 0
+  
+  # Step 2: Apply intervention to eligible individuals
+  eligible <- pop$id %in% sorteados & (t0 >= t_ini) & (t0 <= t_fim)
+  
+  if(any(eligible)) {
+    idx <- which(eligible)
     
-    pop$cont = pop$cont + 1
-    
-    if(pop$imc < imc_min & pop$tdiimc == 0){
+    for(i in idx) {
+      # Decidindo se faz atividade física
+      if(pop$atividade_fisica[i] == 0){
+        # se não fazia 
+        pop$atividade_fisica[i] = rbinom(1, 1, pop$prob_af[i])
+      } else {
+        # se já fazia, tem o dobro de probabilidade de fazer
+        pop$atividade_fisica[i] = rbinom(1, 1, min(2 * pop$prob_af[i], 1))
+      }
       
-      pop$tdiimic = 1
+      # Mesma coisa para dieta
+      if(pop$dieta[i] == 0){
+        # se não fazia 
+        pop$dieta[i] = rbinom(1, 1, pop$prob_dieta[i])
+      } else {
+        # se já fazia, tem o dobro de probabilidade de fazer
+        pop$dieta[i] = rbinom(1, 1, min(2 * pop$prob_dieta[i], 1))
+      }
       
+      # Only apply BMI changes if individual is actually doing something
+      if(pop$atividade_fisica[i] == 1 | pop$dieta[i] == 1) {
+        
+        # Initialize baseline BMI if this is the first time being active
+        if(pop$tdi[i] == 0) {
+          pop$imc0[i] = pop$imc[i]
+        }
+        
+        # Sorteia se a dieta e o AF vão ser feitos o ano todo ou só metade
+        aftodoano = rbinom(1, 1, 0.5)
+        dtodoano = rbinom(1, 1, 0.5)
+        
+        # atualização do IMC
+        if(pop$atividade_fisica[i] == 1 & pop$dieta[i] == 1){
+          red = rnorm(1, 4.2, 0.4)
+          red2 = rnorm(1, 4.2, 0.4) * aftodoano * dtodoano
+          pop$imc[i] = pop$imc[i] - red - red2
+          pop$ured[i] = red + red2
+        } else if(pop$atividade_fisica[i] == 1 & pop$dieta[i] == 0){
+          red = rnorm(1, 0.8, 0.1)
+          red2 = rnorm(1, 0.8, 0.1) * aftodoano
+          pop$imc[i] = pop$imc[i] - red - red2
+          pop$ured[i] = red + red2
+        } else if(pop$atividade_fisica[i] == 0 & pop$dieta[i] == 1){
+          red = rnorm(1, 4, 0.4)
+          red2 = rnorm(1, 4, 0.4) * dtodoano
+          pop$imc[i] = pop$imc[i] - red - red2
+          pop$ured[i] = red + red2
+        }
+      }
     }
+  }
+  
+  # Step 3: Update tracking variables for all individuals currently doing AF or diet
+  active <- pop$atividade_fisica == 1 | pop$dieta == 1
+  
+  if(any(active)) {
+    idx_active <- which(active)
     
-    pop$tdi = 1
-    
-    if(pop$tdi == 1){
+    for(i in idx_active) {
+      # Update continuation counter
+      pop$cont[i] = pop$cont[i] + 1
       
-      pop$imc0 = pop$imc
+      # Check if BMI is below minimum threshold
+      if(pop$imc[i] < imc_min & pop$tdiimc[i] == 0){
+        pop$tdiimc[i] = 1
+      }
       
+      # Set tdi to 1 for active individuals (will be used for wear-off when they stop)
+      pop$tdi[i] = 1
     }
-    
   }
   
   return(pop)
-  
 }
 
-aa = atualiza_interv(pop, sorteados, imc_min = 27, t0 = 1,
-                t_ini = 1, t_fim = 100, wear_off = 4)
 
-summary(aa$imc)
-summary(pop$imc)

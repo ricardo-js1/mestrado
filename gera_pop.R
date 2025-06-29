@@ -190,6 +190,8 @@ gera_pop = function(n_agentes){
 
 # Testando
 
-pop_teste = gera_pop(n_agentes = 10000)
+pop = gera_pop(n_agentes = 1000)
 
-hist(pop_teste$imc)
+pop$imc
+
+
