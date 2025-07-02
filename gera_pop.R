@@ -120,27 +120,6 @@ gera_pop = function(n_agentes){
   # Código 9 para quem é hipertenso em t0
   has = ifelse(pas >= 140 | pad >= 90, 9, 0) 
   
-  # Gerando a estrutura de rede social entre os agentes
-  
-  # Inicializando a matriz de vizinhança
-  # rede_social = matrix(0, nrow = n_agentes, ncol = n_agentes)
-  
-  # Preenchendo a matriz de rede social
-  # for(i in 1:n_agentes){
-  #   
-  #   # A cada iteração, o agente i é removido do sorteio, assim ele não
-  #   # pode fazer parte de sua própria rede social
-  #   agentes = sample(c(1:n_agentes)[-i], size = 2, replace = F)
-  #   
-  #   # Os pares i,j e j,i devem ser iguais a 1 para estabelecer o contato na rede
-  #   rede_social[i, agentes] = 1
-  #   rede_social[agentes, i] = 1
-  #   
-  # }
-  
-  # Número de contatos na rede social
-  # rede = rowSums(rede_social)
-  
   # Atribuindo o grupo
   grupo = ifelse(pas < 120, 119, 139)
   
@@ -149,18 +128,18 @@ gera_pop = function(n_agentes){
   f_probs = function(sexo_idade){
     
     dplyr::case_when(
-      sexo_idade == "F_FE1" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "F_FE2" ~ MASS::mvrnorm(1, c(0.55, 0.55), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "F_FE3" ~ MASS::mvrnorm(1, c(0.5, 0.5), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "F_FE4" ~ MASS::mvrnorm(1, c(0.45, 0.45), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "F_FE5" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "F_FE6" ~ MASS::mvrnorm(1, c(0.35, 0.35), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE1" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE2" ~ MASS::mvrnorm(1, c(0.55, 0.55), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE3" ~ MASS::mvrnorm(1, c(0.5, 0.5), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE4" ~ MASS::mvrnorm(1, c(0.45, 0.45), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE5" ~ MASS::mvrnorm(1, c(0.4, 0.4), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
-      sexo_idade == "M_FE6" ~ MASS::mvrnorm(1, c(0.35, 0.35), matrix(c(0.05, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';')
+      sexo_idade == "F_FE1" ~ MASS::mvrnorm(1, c(0.2692038, 0.2214070), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "F_FE2" ~ MASS::mvrnorm(1, c(0.2548596, 0.2517588), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "F_FE3" ~ MASS::mvrnorm(1, c(0.2639075, 0.2592965), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "F_FE4" ~ MASS::mvrnorm(1, c(0.2498281, 0.2974246), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "F_FE5" ~ MASS::mvrnorm(1, c(0.1588253, 0.3322111), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "F_FE6" ~ MASS::mvrnorm(1, c(0.1500000, 0.3648241), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE1" ~ MASS::mvrnorm(1, c(0.4000000, 0.1500000), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE2" ~ MASS::mvrnorm(1, c(0.3791160, 0.1788945), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE3" ~ MASS::mvrnorm(1, c(0.3389387, 0.2361809), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE4" ~ MASS::mvrnorm(1, c(0.3211078, 0.2668342), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE5" ~ MASS::mvrnorm(1, c(0.1992769, 0.3666834), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';'),
+      sexo_idade == "M_FE6" ~ MASS::mvrnorm(1, c(0.1884291, 0.4000000), matrix(c(0.05^2, 0.75*0.05*0.05, 0.75*0.05*0.05, 0.05^2), 2, 2, byrow = T)) |> paste0(collapse = ';')
     )
     
   }
@@ -168,13 +147,13 @@ gera_pop = function(n_agentes){
   probs = purrr::map_chr(sexo_idade, f_probs)
   
   # Separando a pas e a pad e convertendo em numérico
-  prob_dieta = unlist(strsplit(probs, ';'))[seq(1, n_agentes*2, by = 2)] |> as.numeric()
-  prob_dieta = ifelse(prob_dieta > 1, 0.85, prob_dieta)
-  prob_dieta = ifelse(prob_dieta < 0, 0.15, prob_dieta)
-  
-  prob_af = unlist(strsplit(probs, ';'))[seq(2, n_agentes*2, by = 2)] |> as.numeric()
-  prob_af = ifelse(prob_af > 1, 0.85, prob_af)
-  prob_af = ifelse(prob_af < 0, 0.15, prob_af)
+   prob_dieta = unlist(strsplit(probs, ';'))[seq(1, n_agentes*2, by = 2)] |> as.numeric()
+  # prob_dieta = ifelse(prob_dieta > 1, 0.85, prob_dieta)
+  # prob_dieta = ifelse(prob_dieta < 0, 0.15, prob_dieta)
+  # 
+   prob_af = unlist(strsplit(probs, ';'))[seq(2, n_agentes*2, by = 2)] |> as.numeric()
+  # prob_af = ifelse(prob_af > 1, 0.85, prob_af)
+  # prob_af = ifelse(prob_af < 0, 0.15, prob_af)
   
   # variáveis usadas durante a simulação
   risco = 0
@@ -192,6 +171,5 @@ gera_pop = function(n_agentes){
 
 pop = gera_pop(n_agentes = 1000)
 
-pop$imc
 
 

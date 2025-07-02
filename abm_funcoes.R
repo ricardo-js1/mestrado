@@ -20,8 +20,6 @@ atualiza_idade = function(pop, probs = sobrevida, idademax = 100){
 }
 
 
-
-
 atualiza_pas = function( sexo, grupo, idade, pas){
   
   # Atualizando a pressão arterial sistólica

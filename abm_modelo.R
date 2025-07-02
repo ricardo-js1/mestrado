@@ -1,8 +1,8 @@
 abm_bellido = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
                      pop_alvo = 1, t_ini = 0, t_fim = 100, wear_off = 4){
   
-  pop$prob_af = 0.1
-  pop$prob_dieta = 0.1
+  pop$prob_af = 0.3
+  pop$prob_dieta = 0.3
 
   # Variáveis do modelo
   pop$atividade_fisica = 0
@@ -71,6 +71,13 @@ abm_bellido = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min
     # sorteando os agentes
     sorteados = sorteia_agentes(pop$id, pop$risco, pop_alvo = pop_alvo)
     
+    if(i > t_fim){
+      
+      pop$atividade_fisica = 0
+      pop$dieta = 0
+      
+    }
+    
     # intervindo no imc
     pop = atualiza_interv(pop, sorteados, imc_min = imc_min, t0 = i,
                           t_ini = t_ini, t_fim = t_fim, wear_off = wear_off)
@@ -100,4 +107,5 @@ abm_bellido = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min
   return(data.frame(iter, idade, imc, pas, pad, ativ_fis, dieta, hipertensos, pop_restante, taxa))
 
 }
+
 

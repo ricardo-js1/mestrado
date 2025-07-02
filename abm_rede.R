@@ -1,6 +1,6 @@
 abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
                     pop_alvo = 1, t_ini = 0, t_fim = 100, wear_off = 4, W,
-                    bonus = 0.05, penalidade = 0.05){
+                    bonus = 0.15, penalidade = 0.05){
   
   # Variáveis do modelo
   pop$atividade_fisica = 0
