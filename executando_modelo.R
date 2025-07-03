@@ -65,49 +65,58 @@ teste = modelo_bellido(k = 250)
 # Modelo com rede
 
 # Criando a rede
-W = rede_aleatoria(nrow(pop))
+#W = rede_aleatoria(nrow(pop))
+W = rede_watts_strogatz(nrow(pop))
 
-# Rodando o modelo com intervenção sempre
-absim = data.frame()
-for(i in 1:50){
-  print(i)
-  a = abm_rede(pop, limite_pop = 0.1, t_ini = 0, t_fim = 100, W = W)
-  a$run = i
-  absim = bind_rows(absim, a)
-  absim$modelo = "Intervenção sempre"
+modelo_rede = function(k, W){
+  
+  # Rodando o modelo com intervenção sempre
+  absim = data.frame()
+  for(i in 1:k){
+    print(i)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 0, t_fim = 100, W = W)
+    a$run = i
+    absim = bind_rows(absim, a)
+    absim$modelo = "Intervenção sempre"
+  }
+  
+  # Rodando o modelo sem intervenção
+  absim2 = data.frame()
+  for(i in 1:k){
+    print(i)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 100, t_fim = 100, W = W)
+    a$run = i
+    absim2 = bind_rows(absim2, a)
+    absim2$modelo = "Intervenção nunca"
+  }
+  
+  # Rodando o modelo com interv a partir do 25 ano
+  absim3 = data.frame()
+  for(i in 1:k){
+    print(i)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 25, t_fim = 100, W = W)
+    a$run = i
+    absim3 = bind_rows(absim3, a)
+    absim3$modelo = "Intervenção após 25 anos"
+  }
+  
+  # Rodando o modelo com interv nos primeiros 25 anos
+  absim4 = data.frame()
+  for(i in 1:k){
+    print(i)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 1, t_fim = 25, W = W)
+    a$run = i
+    absim4 = bind_rows(absim4, a)
+    absim4$modelo = "Intervenção até 25 anos"
+  }
+
+  return(bind_rows(absim, absim2, absim3, absim4))
+    
 }
 
-# Rodando o modelo sem intervenção
-absim2 = data.frame()
-for(i in 1:50){
-  print(i)
-  a = abm_rede(pop, limite_pop = 0.1, t_ini = 100, t_fim = 100, W = W)
-  a$run = i
-  absim2 = bind_rows(absim2, a)
-  absim2$modelo = "Intervenção nunca"
-}
+teste_modelo = modelo_rede(k = 250, W)
 
-# Rodando o modelo com interv a partir do 25 ano
-absim3 = data.frame()
-for(i in 1:50){
-  print(i)
-  a = abm_rede(pop, limite_pop = 0.1, t_ini = 25, t_fim = 100, W = W)
-  a$run = i
-  absim3 = bind_rows(absim3, a)
-  absim3$modelo = "Intervenção após 25 anos"
-}
-
-# Rodando o modelo com interv nos primeiros 25 anos
-absim4 = data.frame()
-for(i in 1:50){
-  print(i)
-  a = abm_rede(pop, limite_pop = 0.1, t_ini = 1, t_fim = 25, W = W)
-  a$run = i
-  absim4 = bind_rows(absim4, a)
-  absim4$modelo = "Intervenção até 25 anos"
-}
-
-bind_rows(absim, absim2, absim3, absim4) %>% 
+teste_modelo %>% 
   group_by(modelo, iter) %>% 
   summarise(taxa = mean(taxa)) %>% 
   ggplot(aes(x = iter, y = taxa, group = modelo, color = modelo)) +
@@ -115,7 +124,8 @@ bind_rows(absim, absim2, absim3, absim4) %>%
   geom_vline(xintercept = 25, linetype = 'dashed') +
   theme_classic() + 
   labs(x = 'Iteração/Ano', y = 'Incidência de HAS') +
-  theme(legend.position = 'bottom')
+  theme(legend.position = 'bottom') +
+  scale_x_continuous(breaks = 1:50 )
 
 bind_rows(absim, absim2, absim3, absim4) %>% 
   group_by(modelo, iter) %>% 
