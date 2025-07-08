@@ -1,6 +1,6 @@
 abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
                     pop_alvo = 1, t_ini = 0, t_fim = 100, wear_off = 4, W,
-                    bonus = 0.2, penalidade = 0.05){
+                    bonus = 0.01, penalidade = 0.005){
   
   # Variáveis do modelo
   pop$atividade_fisica = 0
@@ -25,6 +25,9 @@ abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 
   i = 1
   ativ_fis = c()
   dieta = c()
+  prob_af = c()
+  prob_dieta = c()
+  risco = c()
   
   # excluindo da rede quem já começa hipertenso
   W = atualiza_rede(W, pop$has)
@@ -78,18 +81,20 @@ abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 
     if(i >= t_ini & i <= t_fim){
       
       pop$prob_af = atualiza_prob_af(pop$prob_af, W, pop$atividade_fisica,
+                                     risco = pop$risco,
                                      bonus = bonus, penalidade = penalidade)
       
       pop$prob_dieta = atualiza_prob_af(pop$prob_dieta, W, pop$dieta,
+                                        risco = pop$risco,
                                         bonus = bonus, penalidade = penalidade)
       
-    }
+   }
     
     if(i > t_fim){
-      
+
       pop$atividade_fisica = 0
       pop$dieta = 0
-      
+
     }
 
     # intervindo no imc
@@ -104,12 +109,15 @@ abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 
     imc[i] = median(pop$imc, na.rm = T)
     pas[i] = median(pop$pas, na.rm = T)
     pad[i] = median(pop$pad, na.rm = T)
+    prob_dieta[i] = median(pop$prob_dieta, na.rm = T)
+    prob_af[i] = median(pop$prob_af, na.rm = T)
     hipertensos[i] = nrow(pop[pop$has == 1,])
     tamanho_pop = nrow(pop)
     pop_restante[i] = nrow(pop)
     taxa[i] = hipertensos[i]/(pop_iter[i]) 
     ativ_fis[i] = sum(pop$atividade_fisica)
     dieta[i] = sum(pop$dieta)
+    risco[i] = sum(pop$risco)
     
     # excluindo os hipertensos da rede
     W = atualiza_rede(W, pop$has)
@@ -121,6 +129,7 @@ abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 
     
   }
   
-  return(data.frame(iter, idade, imc, pas, pad, ativ_fis, dieta, hipertensos, pop_restante, taxa))
+  return(data.frame(iter, idade, imc, pas, pad, ativ_fis, dieta, prob_af, prob_dieta, hipertensos, risco, pop_restante, taxa))
   
 }
+

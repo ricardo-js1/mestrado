@@ -43,9 +43,6 @@ abm_bellido = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min
     # atualizando quem morreu
     pop$morte = atualiza_morto(pop$idade, pop$sexo)
 
-    # excluindo os mortos da rede
-    W = atualiza_rede(W, pop$morto)
-    
     # excluindo os mortos
     pop = pop[pop$morte == 0,]
     

@@ -312,16 +312,21 @@ atualiza_interv = function(pop, sorteados, imc_min, t0,
   return(pop)
 }
 
-atualiza_prob_af = function(prob_af, W, atividade_fisica,
+atualiza_prob_af = function(prob_af, W, atividade_fisica, risco,
                             bonus = 0.1, penalidade = 0.1){
   
   n_agentes = nrow(W)
   
   n_vizinhos = rowSums(W)
   
-  n_interv = W %*% atividade_fisica
+  n_interv = W %*% atividade_fisica * risco
   
-  taxa = ifelse(n_vizinhos > 0, n_interv/n_vizinhos, 0)
+  W_risco = W * matrix(risco, nrow = n_agentes, ncol = n_agentes,
+                       byrow = T)
+  
+  n_viz_risco = rowSums(W_risco)
+  
+  taxa = ifelse(n_viz_risco > 0, n_interv/n_viz_risco, 0)
   
   influencia_social = bonus * taxa - (1 - taxa) * penalidade
   
@@ -331,22 +336,29 @@ atualiza_prob_af = function(prob_af, W, atividade_fisica,
   
 }
 
-atualiza_prob_dieta = function(prob_dieta, W, atividade_fisica,
+atualiza_prob_dieta = function(prob_dieta, W, dieta,
+                               risco,
                                bonus = 0.1, penalidade = 0.1){
-  
-  n_agentes = nrow(W)
-  
-  n_vizinhos = rowSums(W)
-  
-  n_interv = W %*% atividade_fisica
-  
-  taxa = ifelse(n_vizinhos > 0, n_interv/n_vizinhos, 0)
-  
-  influencia_social = bonus * taxa - (1 - taxa) * penalidade
-  
-  prob_atualizada = pmax(0, pmin(1, prob_dieta + influencia_social))
-  
-  return(prob_atualizada)
+    
+    n_agentes = nrow(W)
+    
+    n_vizinhos = rowSums(W)
+    
+    n_interv = W %*% dieta * risco
+    
+    W_risco = W * matrix(risco, nrow = n_agentes, ncol = n_agentes,
+                         byrow = T)
+    
+    n_viz_risco = rowSums(W_risco)
+    
+    taxa = ifelse(n_viz_risco > 0, n_interv/n_viz_risco, 0)
+    
+    influencia_social = bonus * taxa - (1 - taxa) * penalidade
+    
+    prob_atualizada = pmax(0, pmin(1, prob_dieta + influencia_social))
+    
+    return(prob_atualizada)
+    
   
 }
 

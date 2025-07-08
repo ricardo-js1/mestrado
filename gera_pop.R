@@ -167,9 +167,5 @@ gera_pop = function(n_agentes){
   
 }
 
-# Testando
-
-pop = gera_pop(n_agentes = 1000)
-
 
 

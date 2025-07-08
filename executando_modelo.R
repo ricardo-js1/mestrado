@@ -8,10 +8,11 @@ source('abm_modelo.R')
 source('abm_rede.R')
 source('gera_rede.R')
 
+# Gerando a população
+pop = gera_pop(1000)
+
 # Modelo da Bellido
-
-
-modelo_bellido = function(k){
+modelo_bellido = function(pop, k){
   
   absim1 = data.frame()
   print("Modelo com intervenção sempre disponível")
@@ -60,7 +61,7 @@ modelo_bellido = function(k){
   
 }
 
-teste = modelo_bellido(k = 250)
+teste = modelo_bellido(pop, k = 250)
 
 # Modelo com rede
 
@@ -125,23 +126,71 @@ teste_modelo %>%
   theme_classic() + 
   labs(x = 'Iteração/Ano', y = 'Incidência de HAS') +
   theme(legend.position = 'bottom') +
-  scale_x_continuous(breaks = 1:50 )
+  scale_x_continuous(breaks = 1:50 ) +
+  ggtitle("Taxa de incidência de HAS")
 
-bind_rows(absim, absim2, absim3, absim4) %>% 
+teste_modelo %>% 
+  group_by(modelo, iter) %>% 
+  summarise(taxa = mean(risco)) %>% 
+  ggplot(aes(x = iter, y = taxa, group = modelo, color = modelo)) +
+  geom_line(linewidth = 1) +
+  geom_vline(xintercept = 25, linetype = 'dashed') +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Incidência de HAS') +
+  theme(legend.position = 'bottom') +
+  scale_x_continuous(breaks = 1:50 ) +
+  ggtitle("População sob risco")
+
+teste_modelo %>% 
+  group_by(modelo, iter) %>% 
+  summarise(imc = mean(imc)) %>% 
+  ggplot(aes(x = iter, y = imc, group = modelo, color = modelo)) +
+  geom_line(linewidth = 1) +
+  geom_vline(xintercept = 25, linetype = 'dashed') +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Incidência de HAS') +
+  theme(legend.position = 'bottom') +
+  scale_x_continuous(breaks = 1:50 ) +
+  ggtitle("IMC")
+
+teste_modelo %>% 
   group_by(modelo, iter) %>% 
   summarise(ativ_fis = mean(ativ_fis)) %>% 
   ggplot(aes(x = iter, y = ativ_fis, group = modelo, color = modelo)) +
-  geom_line() +
+  geom_line(linewidth = 1) +
   geom_vline(xintercept = 25, linetype = 'dashed') +
   theme_classic() + 
   labs(x = 'Iteração/Ano', y = 'Número de agentes na intervenção') +
-  theme(legend.position = 'bottom')
+  theme(legend.position = 'bottom') +
+  ggtitle("Atividade física")
 
-bind_rows(absim, absim2, absim3, absim4) %>% 
+teste_modelo %>% 
+  group_by(modelo, iter) %>% 
+  summarise(prob_dieta = mean(prob_dieta)) %>% 
+  ggplot(aes(x = iter, y = prob_dieta, group = modelo, color = modelo)) +
+  geom_line(linewidth = 1) +
+  geom_vline(xintercept = 25, linetype = 'dashed') +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Probabilidade de adesão à dieta') +
+  theme(legend.position = 'bottom') +
+  ggtitle("Dieta")
+
+teste_modelo %>% 
+  group_by(modelo, iter) %>% 
+  summarise(prob_af = mean(prob_af)) %>% 
+  ggplot(aes(x = iter, y = prob_af, group = modelo, color = modelo)) +
+  geom_line(linewidth = 1) +
+  geom_vline(xintercept = 25, linetype = 'dashed') +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Probabilidade de adesão à atividade física') +
+  theme(legend.position = 'bottom') +
+  ggtitle("Atividade física")
+
+teste_modelo %>% 
   group_by(modelo, iter) %>% 
   summarise(dieta = mean(dieta)) %>% 
   ggplot(aes(x = iter, y = dieta, group = modelo, color = modelo)) +
-  geom_line() +
+  geom_line(linewidth = 1) +
   geom_vline(xintercept = 25, linetype = 'dashed') +
   theme_classic() + 
   labs(x = 'Iteração/Ano', y = 'Número de agentes na intervenção') +
