@@ -244,7 +244,7 @@ atualiza_interv = function(pop, sorteados, imc_min, t0,
         pop$atividade_fisica[i] = rbinom(1, 1, pop$prob_af[i])
       } else {
         # se já fazia, tem o dobro de probabilidade de fazer
-        pop$atividade_fisica[i] = rbinom(1, 1, min(2 * pop$prob_af[i], 1))
+        pop$atividade_fisica[i] = rbinom(1, 1, min(1.2 * pop$prob_af[i], 1))
       }
       
       # Mesma coisa para dieta
@@ -253,7 +253,7 @@ atualiza_interv = function(pop, sorteados, imc_min, t0,
         pop$dieta[i] = rbinom(1, 1, pop$prob_dieta[i])
       } else {
         # se já fazia, tem o dobro de probabilidade de fazer
-        pop$dieta[i] = rbinom(1, 1, min(2 * pop$prob_dieta[i], 1))
+        pop$dieta[i] = rbinom(1, 1, min(1.2 * pop$prob_dieta[i], 1))
       }
       
       # Only apply BMI changes if individual is actually doing something

@@ -35,6 +35,8 @@ abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 
   # excluindo quem já começa hipertenso
   pop = pop[pop$has != 9,]
   
+  pop_at = pop
+  
   #  for(i in 1:k){
   while(tamanho_pop/pop_inicial >= limite_pop & i <= max_iter){
     
@@ -125,11 +127,15 @@ abm_rede = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 
     # excluindo os hipertensos
     pop = pop[pop$has != 1,]
     
+    pop_at = bind_rows(pop_at, pop)
+    
     i = i + 1
     
   }
   
-  return(data.frame(iter, idade, imc, pas, pad, ativ_fis, dieta, prob_af, prob_dieta, hipertensos, risco, pop_restante, taxa))
+  return(list(pop_at,
+              data.frame(iter, idade, imc, pas, pad, ativ_fis, dieta, prob_af, prob_dieta, hipertensos, risco, pop_restante, taxa)))
   
 }
+
 

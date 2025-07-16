@@ -61,13 +61,14 @@ modelo_bellido = function(pop, k){
   
 }
 
-teste = modelo_bellido(pop, k = 250)
+mod_bellido = modelo_bellido(pop, k = 50)
 
 # Modelo com rede
 
 # Criando a rede
-#W = rede_aleatoria(nrow(pop))
-W = rede_watts_strogatz(nrow(pop))
+W_aleatoria = rede_aleatoria(nrow(pop))
+W_ws = rede_watts_strogatz(nrow(pop))
+W_sf = rede_scale_free(nrow(pop))
 
 modelo_rede = function(k, W){
   
@@ -75,7 +76,7 @@ modelo_rede = function(k, W){
   absim = data.frame()
   for(i in 1:k){
     print(i)
-    a = abm_rede(pop, limite_pop = 0.1, t_ini = 0, t_fim = 100, W = W)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 0, t_fim = 100, W = W)[[2]]
     a$run = i
     absim = bind_rows(absim, a)
     absim$modelo = "Intervenção sempre"
@@ -85,7 +86,7 @@ modelo_rede = function(k, W){
   absim2 = data.frame()
   for(i in 1:k){
     print(i)
-    a = abm_rede(pop, limite_pop = 0.1, t_ini = 100, t_fim = 100, W = W)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 100, t_fim = 100, W = W)[[2]]
     a$run = i
     absim2 = bind_rows(absim2, a)
     absim2$modelo = "Intervenção nunca"
@@ -95,7 +96,7 @@ modelo_rede = function(k, W){
   absim3 = data.frame()
   for(i in 1:k){
     print(i)
-    a = abm_rede(pop, limite_pop = 0.1, t_ini = 25, t_fim = 100, W = W)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 25, t_fim = 100, W = W)[[2]]
     a$run = i
     absim3 = bind_rows(absim3, a)
     absim3$modelo = "Intervenção após 25 anos"
@@ -105,7 +106,7 @@ modelo_rede = function(k, W){
   absim4 = data.frame()
   for(i in 1:k){
     print(i)
-    a = abm_rede(pop, limite_pop = 0.1, t_ini = 1, t_fim = 25, W = W)
+    a = abm_rede(pop, limite_pop = 0.1, t_ini = 1, t_fim = 25, W = W)[[2]]
     a$run = i
     absim4 = bind_rows(absim4, a)
     absim4$modelo = "Intervenção até 25 anos"
@@ -115,7 +116,10 @@ modelo_rede = function(k, W){
     
 }
 
-teste_modelo = modelo_rede(k = 250, W)
+mod_aleatorio = modelo_rede(k = 50, W_aleatoria)
+mod_ws = modelo_rede(k = 50, W_ws)
+mod_sf = modelo_rede(k = 50, W_sf)
+mod_homofia = modelo_rede(k = 50, W_homophilia)
 
 teste_modelo %>% 
   group_by(modelo, iter) %>% 
@@ -195,4 +199,93 @@ teste_modelo %>%
   theme_classic() + 
   labs(x = 'Iteração/Ano', y = 'Número de agentes na intervenção') +
   theme(legend.position = 'bottom')
+
+
+# comparando os dois modelos
+mod_bellido %>%
+  filter(modelo == "Intervenção sempre") %>% 
+  mutate(tipo = "Bellido") %>% 
+  bind_rows(mod_aleatorio %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede aleatória")) %>% 
+  bind_rows(mod_ws %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Watts-Strogatz")) %>% 
+  bind_rows(mod_sf %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Scale-Free")) %>% 
+  group_by(tipo, iter) %>% 
+  summarise(taxa = mean(taxa)) %>% 
+  ggplot(aes(x = iter, y = taxa, color = tipo)) +
+  geom_line(linewidth = 1) +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Número de agentes na intervenção') +
+  theme(legend.position = 'bottom') +
+  ggtitle("Incidência HAS")
+
+mod_bellido %>%
+  filter(modelo == "Intervenção sempre") %>% 
+  mutate(tipo = "Bellido") %>% 
+  bind_rows(mod_aleatorio %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede aleatória")) %>% 
+  bind_rows(mod_ws %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Watts-Strogatz")) %>% 
+  bind_rows(mod_sf %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Scale-Free")) %>% 
+  group_by(tipo, iter) %>% 
+  summarise(taxa = mean(imc)) %>% 
+  ggplot(aes(x = iter, y = taxa, color = tipo)) +
+  geom_line(linewidth = 1) +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'IMC médio') +
+  theme(legend.position = 'bottom') +
+  ggtitle("IMC") +
+  ylim(0, NA)
+
+mod_bellido %>%
+  filter(modelo == "Intervenção sempre") %>% 
+  mutate(tipo = "Bellido") %>% 
+  bind_rows(mod_aleatorio %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede aleatória")) %>% 
+  bind_rows(mod_ws %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Watts-Strogatz")) %>% 
+  bind_rows(mod_sf %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Scale-Free")) %>% 
+  group_by(tipo, iter) %>% 
+  summarise(ativ_fis = mean(ativ_fis)) %>% 
+  ggplot(aes(x = iter, y = ativ_fis,  color = tipo)) +
+  geom_line(linewidth = 1) +
+  geom_vline(xintercept = 25, linetype = 'dashed') +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Número de agentes na intervenção') +
+  theme(legend.position = 'bottom') +
+  ggtitle("Atividade física")
+
+mod_bellido %>%
+  filter(modelo == "Intervenção sempre") %>% 
+  mutate(tipo = "Bellido") %>% 
+  bind_rows(mod_aleatorio %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede aleatória")) %>% 
+  bind_rows(mod_ws %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Watts-Strogatz")) %>% 
+  bind_rows(mod_sf %>% 
+              filter(modelo == "Intervenção sempre") %>% 
+              mutate(tipo = "Rede Scale-Free")) %>% 
+  group_by(tipo, iter) %>% 
+  summarise(dieta = mean(dieta)) %>% 
+  ggplot(aes(x = iter, y = dieta,  color = tipo)) +
+  geom_line(linewidth = 1) +
+  geom_vline(xintercept = 25, linetype = 'dashed') +
+  theme_classic() + 
+  labs(x = 'Iteração/Ano', y = 'Número de agentes na intervenção') +
+  theme(legend.position = 'bottom') +
+  ggtitle("Dieta")
 

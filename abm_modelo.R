@@ -1,8 +1,11 @@
 abm_bellido = function(pop, limite_pop = 0.1, max_iter = 100, tempo = 4, imc_min = 27,
-                     pop_alvo = 1, t_ini = 0, t_fim = 100, wear_off = 4){
+                     pop_alvo = 1, t_ini = 0, t_fim = 100, wear_off = 4,
+                     probs = T){
   
-  pop$prob_af = 0.3
-  pop$prob_dieta = 0.3
+  if(probs == T){
+    pop$prob_af = 0.3
+    pop$prob_dieta = 0.3
+  }
 
   # Variáveis do modelo
   pop$atividade_fisica = 0
